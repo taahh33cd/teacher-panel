@@ -1,0 +1,1804 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Teacher Panel · TOEIC Course</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@600;700&family=Be+Vietnam+Pro:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* Light theme */
+  --bg:#F0F2F7;--s1:#FFFFFF;--s2:#F7F8FC;--s3:#EEF0F7;
+  --border:#DDE1EE;--gold:#B07D1A;--glow:rgba(176,125,26,.08);
+  --sage:#2E7D46;--rust:#C0341A;--blue:#2457A0;
+  --text:#1A1E2E;--muted:#7A82A0;--line:#E8EBF5;
+  /* Sidebar accent */
+  --sb-bg:#1E2235;--sb-border:#2A2F45;--sb-text:#C8CCDB;--sb-muted:#5A6080;
+  --sb-gold:#E8A825;--sb-glow:rgba(232,168,37,.12);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh;}
+
+/* ─── SIDEBAR (kept dark for contrast) ─── */
+.sb{width:220px;flex-shrink:0;background:var(--sb-bg);border-right:1px solid var(--sb-border);display:flex;flex-direction:column;position:fixed;height:100vh;left:0;top:0;z-index:20;}
+.sb-top{padding:1.2rem 1.2rem .9rem;border-bottom:1px solid var(--sb-border);}
+.sb-logo{font-family:'Lora',serif;font-size:.98rem;color:var(--sb-gold);display:flex;align-items:center;gap:.5rem;}
+.sb-sub{font-size:.67rem;color:var(--sb-muted);margin-top:.2rem;}
+.sb-nav{padding:.6rem 0;border-bottom:1px solid var(--sb-border);}
+.nv{display:flex;align-items:center;gap:.55rem;padding:.52rem 1.1rem;font-size:.81rem;color:var(--sb-muted);cursor:pointer;transition:all .15s;border-right:2px solid transparent;}
+.nv:hover{color:var(--sb-text);background:rgba(255,255,255,.04);}
+.nv.on{color:var(--sb-gold);background:var(--sb-glow);border-right-color:var(--sb-gold);}
+.nv .cnt{background:var(--rust);color:#fff;border-radius:8px;font-size:.6rem;padding:.05rem .35rem;font-weight:700;margin-left:.3rem;}
+.sb-students{flex:1;overflow-y:auto;padding:.6rem 0;}
+.sb-lbl{font-size:.62rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--sb-muted);padding:0 1.1rem;margin-bottom:.35rem;}
+.sv-item{display:flex;align-items:center;gap:.55rem;padding:.42rem 1.1rem;cursor:pointer;transition:background .15s;font-size:.8rem;color:var(--sb-text);}
+.sv-item:hover{background:rgba(255,255,255,.05);}
+.sv-item.on{background:var(--sb-glow);color:var(--sb-gold);}
+.sv-av{width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-size:.62rem;font-weight:700;color:var(--sb-gold);flex-shrink:0;}
+.sv-item.on .sv-av{background:var(--sb-gold);color:var(--sb-bg);}
+.sv-name{flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:130px;}
+.sv-id{font-size:.62rem;opacity:.45;font-family:'JetBrains Mono',monospace;}
+.sb-bottom{padding:.9rem 1.1rem;border-top:1px solid var(--sb-border);}
+.btn-add{width:100%;padding:.5rem;border:1px dashed var(--sb-border);background:none;color:var(--sb-muted);font-family:'Be Vietnam Pro',sans-serif;font-size:.77rem;cursor:pointer;transition:all .15s;}
+.btn-add:hover{border-color:var(--sb-gold);color:var(--sb-gold);}
+
+/* ─── MAIN ─── */
+.mn{margin-left:220px;flex:1;display:flex;flex-direction:column;}
+.tbar{background:var(--s1);border-bottom:1px solid var(--border);height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 1.8rem;position:sticky;top:0;z-index:10;box-shadow:0 1px 3px rgba(0,0,0,.06);}
+.tbar-l h2{font-family:'Lora',serif;font-size:1.1rem;font-weight:600;color:var(--text);}
+.tbar-l .sub{font-size:.67rem;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-top:.1rem;}
+.tbar-r{display:flex;gap:.5rem;}
+.btn{padding:.44rem 1rem;font-family:'Be Vietnam Pro',sans-serif;font-size:.77rem;font-weight:500;cursor:pointer;border:none;transition:all .15s;}
+.btn:hover{opacity:.85;}
+.bp{background:var(--gold);color:#fff;}
+.bg{background:none;border:1px solid var(--border)!important;color:var(--muted);}
+.bg:hover{border-color:var(--text)!important;color:var(--text);}
+.bd{background:none;border:1px solid var(--rust)!important;color:var(--rust);}
+
+.cnt-area{flex:1;padding:1.8rem;overflow-y:auto;background:var(--bg);}
+
+/* ─── PAGES ─── */
+.pg{display:none;}.pg.on{display:block;}
+
+/* ─── STATS ─── */
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.5rem;}
+.stat-c{background:var(--s1);border:1px solid var(--border);padding:1.1rem 1.3rem;border-radius:2px;box-shadow:0 1px 3px rgba(0,0,0,.05);}
+.stat-n{font-family:'Lora',serif;font-size:2.4rem;font-weight:700;color:var(--gold);line-height:1;}
+.stat-l{font-size:.7rem;color:var(--muted);margin-top:.25rem;}
+
+/* ─── CARDS ─── */
+.card{background:var(--s1);border:1px solid var(--border);padding:1.3rem;margin-bottom:1.3rem;border-radius:2px;box-shadow:0 1px 3px rgba(0,0,0,.04);}
+.card-hd{font-size:.67rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:1.1rem;display:flex;align-items:center;justify-content:space-between;}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:1.3rem;}
+
+/* ─── FORM ─── */
+.fl{margin-bottom:.85rem;}
+.fl label{display:block;font-size:.67rem;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:.38rem;}
+.fl input,.fl select,.fl textarea{width:100%;padding:.55rem .8rem;background:var(--s2);border:1px solid var(--border);color:var(--text);font-family:'Be Vietnam Pro',sans-serif;font-size:.85rem;outline:none;transition:border-color .15s;}
+.fl input:focus,.fl select:focus,.fl textarea:focus{border-color:var(--gold);}
+.fl textarea{resize:vertical;min-height:70px;}
+.fl select option{background:var(--s1);}
+.fl-row{display:flex;gap:.7rem;}.fl-row .fl{flex:1;}
+
+/* ─── LIST ITEMS ─── */
+.li{display:flex;align-items:center;gap:.75rem;padding:.58rem .8rem;background:var(--s2);border:1px solid var(--border);margin-bottom:.4rem;}
+.li-body{flex:1;}
+.li-t{font-size:.83rem;font-weight:500;}
+.li-s{font-size:.7rem;color:var(--muted);margin-top:.12rem;font-family:'JetBrains Mono',monospace;}
+.rm{background:none;border:none;color:var(--muted);cursor:pointer;font-size:.95rem;padding:0 .15rem;transition:color .15s;}
+.rm:hover{color:var(--rust);}
+.sc-val{font-family:'Lora',serif;font-size:1.25rem;color:var(--gold);min-width:44px;}
+.mod-sel{background:var(--s1);border:1px solid var(--border);color:var(--text);font-family:'Be Vietnam Pro',sans-serif;font-size:.74rem;padding:.28rem .5rem;cursor:pointer;outline:none;}
+.mod-done{border-left:3px solid var(--sage)!important;}
+.mod-current{border-left:3px solid var(--gold)!important;}
+.mod-locked{opacity:.5;}
+.tp{font-size:.61rem;font-weight:600;padding:.14rem .48rem;white-space:nowrap;}
+.tL{background:#dbeeff;color:#1a4a80;}.tR{background:#dcf5e8;color:#1a5c33;}
+.tG{background:#fef3dc;color:#7a4e0a;}.tV{background:#fde8e0;color:#8c2a10;}
+.tW{background:#ede8f8;color:#4a1f8a;}.tO{background:var(--s3);color:var(--muted);}
+
+/* ─── HW SUBMISSION (teacher view) ─── */
+.hw-link-li{display:flex;align-items:center;gap:.5rem;padding:.4rem 0;border-bottom:1px solid var(--line);}
+.hw-link-li:last-child{border-bottom:none;}
+.hw-link-text{font-size:.8rem;flex:1;color:var(--text);}
+.hw-link-actions{display:flex;align-items:center;gap:.45rem;flex-shrink:0;}
+.hw-link-a{font-size:.7rem;color:var(--blue);text-decoration:none;padding:.18rem .5rem;border:1px solid rgba(36,87,160,.25);white-space:nowrap;transition:all .15s;}
+.hw-link-a:hover{color:var(--gold);border-color:var(--gold);}
+.hw-sub-link{font-size:.7rem;color:var(--sage);text-decoration:none;padding:.18rem .5rem;border:1px solid rgba(46,125,70,.25);white-space:nowrap;transition:all .15s;}
+.hw-sub-link:hover{color:var(--gold);border-color:var(--gold);}
+.hw-sub-time{font-size:.62rem;color:var(--muted);font-family:'JetBrains Mono',monospace;white-space:nowrap;}
+.hw-sub-empty{font-size:.68rem;color:var(--muted);font-style:italic;}
+
+/* ─── PROGRESS ─── */
+.prog-row{display:flex;align-items:center;gap:.8rem;padding:.6rem .8rem;background:var(--s2);border:1px solid var(--border);margin-bottom:.4rem;}
+.prog-sv-name{font-size:.83rem;font-weight:500;flex:1;min-width:90px;color:var(--text);}
+.prog-bar-wrap{flex:2;}
+.prog-bar{height:5px;background:var(--line);position:relative;}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--sage),var(--gold));transition:width .5s;}
+.prog-fill.full{background:var(--sage);}
+.prog-pct{font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--gold);min-width:38px;text-align:right;}
+.prog-pct.full{color:var(--sage);}
+.prog-date{font-size:.65rem;color:var(--muted);font-family:'JetBrains Mono',monospace;}
+.prog-lag{background:rgba(192,52,26,.05);border-left:3px solid var(--rust)!important;}
+.prog-lag .prog-sv-name{color:var(--rust);}
+
+/* ─── LINK BOX ─── */
+.link-box{display:flex;align-items:center;gap:.6rem;background:var(--s3);border:1px solid var(--border);padding:.65rem .85rem;margin-bottom:.8rem;}
+.link-url{flex:1;font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--gold);word-break:break-all;}
+.link-cp{background:none;border:1px solid var(--border);color:var(--muted);padding:.28rem .65rem;font-size:.7rem;cursor:pointer;white-space:nowrap;transition:all .15s;}
+.link-cp:hover{border-color:var(--gold);color:var(--gold);}
+
+/* ─── BOOKING ─── */
+.bk-card{background:var(--s2);border:1px solid var(--border);padding:.9rem 1rem;margin-bottom:.55rem;display:flex;align-items:flex-start;gap:.9rem;}
+.bk-info{flex:1;}
+.bk-name{font-size:.88rem;font-weight:600;color:var(--text);}
+.bk-time{font-family:'JetBrains Mono',monospace;font-size:.73rem;color:var(--muted);margin-top:.15rem;}
+.bk-note{font-size:.78rem;color:var(--muted);margin-top:.35rem;font-style:italic;}
+.bk-acts{display:flex;gap:.4rem;flex-shrink:0;}
+.btn-ok{background:var(--sage);color:#fff;border:none;padding:.38rem .75rem;font-size:.73rem;cursor:pointer;font-family:'Be Vietnam Pro',sans-serif;transition:opacity .15s;}
+.btn-ok:hover{opacity:.85;}
+.btn-no{background:none;border:1px solid var(--rust);color:var(--rust);padding:.38rem .75rem;font-size:.73rem;cursor:pointer;font-family:'Be Vietnam Pro',sans-serif;transition:all .15s;}
+.btn-no:hover{background:var(--rust);color:#fff;}
+.bs{font-size:.63rem;font-weight:600;padding:.18rem .55rem;}
+.bsa{background:rgba(46,125,70,.12);color:var(--sage);}
+.bsd{background:rgba(192,52,26,.1);color:var(--rust);}
+.bsp{background:rgba(176,125,26,.1);color:var(--gold);}
+
+/* ─── SLOT ─── */
+.slot-li{display:flex;align-items:center;gap:.8rem;padding:.72rem .85rem;background:var(--s2);border:1px solid var(--border);margin-bottom:.45rem;}
+.slot-info{flex:1;}
+.slot-d{font-size:.86rem;font-weight:500;color:var(--text);}
+.slot-t{font-family:'JetBrains Mono',monospace;font-size:.76rem;color:var(--gold);margin-top:.1rem;}
+.slot-n{font-size:.7rem;color:var(--muted);margin-top:.08rem;}
+.slot-taken{font-size:.68rem;color:var(--gold);}
+
+/* ─── SCORE REVIEW ─── */
+.sr-card{background:var(--s2);border:1px solid var(--border);padding:.9rem 1rem;margin-bottom:.55rem;}
+.sr-hd{display:flex;align-items:flex-start;gap:.8rem;}
+.sr-info{flex:1;}
+.sr-name{font-size:.88rem;font-weight:600;color:var(--text);}
+.sr-meta{font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--muted);margin-top:.15rem;}
+.sr-score{font-family:'Lora',serif;font-size:2rem;font-weight:700;color:var(--gold);min-width:56px;line-height:1;margin-top:.1rem;}
+.sr-acts{display:flex;gap:.4rem;flex-shrink:0;align-items:flex-start;}
+.sr-parts{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.6rem;}
+.sr-part-pip{font-family:'JetBrains Mono',monospace;font-size:.67rem;background:var(--s3);border:1px solid var(--border);padding:.15rem .45rem;color:var(--text);}
+.sr-part-pip.ls{background:#dbeeff;border-color:rgba(36,87,160,.2);color:#1a4a80;}
+.sr-part-pip.rd{background:#dcf5e8;border-color:rgba(46,125,70,.2);color:#1a5c33;}
+.sr-note{font-size:.76rem;color:var(--muted);margin-top:.4rem;font-style:italic;}
+
+/* ─── Rich-text description editor ─── */
+.hw-item-row{display:flex;gap:.4rem;align-items:flex-start;margin-bottom:.55rem;flex-direction:column;}
+.hw-item-row .hw-item-top{display:flex;gap:.4rem;align-items:center;width:100%;}
+.hw-item-row input{flex:1;padding:.42rem .6rem;background:var(--s3);border:1px solid var(--border);color:var(--text);font-family:'Be Vietnam Pro',sans-serif;font-size:.8rem;outline:none;}
+.hw-item-row input:focus{border-color:var(--gold);}
+.hw-item-row input.link-inp{color:var(--blue);font-size:.75rem;}
+.hw-item-row input.link-inp::placeholder{color:var(--muted);}
+.hw-desc-wrap{width:100%;display:none;padding-left:0;}
+.hw-desc-wrap.open{display:block;}
+.hw-desc-toolbar{display:flex;gap:2px;margin-bottom:3px;padding:3px 5px;background:var(--s3);border:1px solid var(--border);border-bottom:none;}
+.hw-desc-toolbar button{background:none;border:1px solid transparent;color:var(--muted);padding:.15rem .45rem;font-size:.72rem;cursor:pointer;font-family:'Be Vietnam Pro',sans-serif;transition:all .12s;}
+.hw-desc-toolbar button:hover{background:var(--s2);border-color:var(--border);color:var(--text);}
+.hw-desc-toolbar button.active{background:var(--gold);border-color:var(--gold);color:#fff;}
+.hw-desc-toolbar .hl-btn{background:rgba(255,220,50,.35);border-color:rgba(180,150,0,.3);color:var(--text);}
+.hw-desc-toolbar .hl-btn:hover,.hw-desc-toolbar .hl-btn.active{background:rgba(255,220,50,.8);border-color:rgba(180,150,0,.5);color:#000;}
+.hw-desc-editor{min-height:54px;padding:.45rem .65rem;background:var(--s2);border:1px solid var(--border);color:var(--text);font-family:'Be Vietnam Pro',sans-serif;font-size:.8rem;line-height:1.6;outline:none;white-space:pre-wrap;}
+.hw-desc-editor:focus{border-color:var(--gold);}
+.hw-desc-editor mark{background:rgba(255,220,50,.7);color:inherit;border-radius:2px;padding:0 1px;}
+.hw-desc-toggle{background:none;border:1px solid var(--border);color:var(--muted);padding:.18rem .55rem;font-size:.68rem;cursor:pointer;white-space:nowrap;transition:all .13s;font-family:'Be Vietnam Pro',sans-serif;}
+.hw-desc-toggle:hover{border-color:var(--gold);color:var(--gold);}
+.hw-desc-toggle.has-desc{border-color:rgba(176,125,26,.4);color:var(--gold);background:rgba(176,125,26,.07);}
+/* Teacher read view – desc under item */
+.hw-item-desc{font-size:.77rem;color:var(--text);line-height:1.6;margin:.25rem 0 .15rem .05rem;padding:.35rem .6rem;background:rgba(176,125,26,.05);border-left:2px solid rgba(176,125,26,.3);word-break:break-word;}
+.hw-item-desc mark{background:rgba(255,220,50,.65);color:inherit;border-radius:2px;padding:0 1px;}
+.hw-item-desc div{min-height:1em;}
+.hw-item-desc b,.hw-item-desc strong{font-weight:700;}
+.hw-item-desc i,.hw-item-desc em{font-style:italic;}
+.hw-item-desc u{text-decoration:underline;}
+.hw-sheet{background:var(--s2);border:1px solid var(--border);padding:.9rem 1rem;margin-bottom:.55rem;}
+.hw-sheet-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem;}
+/* Daily link in teacher view */
+.hw-daylink{display:flex;align-items:center;gap:.55rem;padding:.45rem .7rem;margin-bottom:.6rem;border-radius:2px;}
+.hw-daylink.has-link{background:rgba(46,125,70,.07);border:1px solid rgba(46,125,70,.2);}
+.hw-daylink.no-link{background:var(--s3);border:1px solid var(--border);}
+.hw-daylink-lbl{font-size:.67rem;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);white-space:nowrap;}
+.hw-daylink-url{font-size:.76rem;color:var(--sage);text-decoration:none;word-break:break-all;}
+.hw-daylink-url:hover{text-decoration:underline;}
+.hw-daylink-time{font-size:.65rem;color:var(--muted);white-space:nowrap;margin-left:auto;}
+.hw-sheet-date{font-family:'JetBrains Mono',monospace;font-size:.77rem;color:var(--gold);}
+.hw-sheet-label{font-size:.82rem;font-weight:600;color:var(--text);}
+.hw-sec{margin-bottom:.5rem;}
+.hw-sec-title{font-size:.63rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;margin-bottom:.3rem;}
+.hw-link-li{display:flex;align-items:center;gap:.45rem;padding:.3rem 0;border-bottom:1px solid var(--line);}
+.hw-link-li:last-child{border-bottom:none;}
+.hw-link-text{font-size:.8rem;flex:1;}
+.hw-link-a{font-size:.73rem;color:var(--blue);text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px;}
+.hw-link-a:hover{color:var(--gold);}
+
+.empty{padding:1.8rem;text-align:center;color:var(--muted);font-size:.82rem;font-style:italic;border:1px dashed var(--border);}
+
+/* ─── TOAST ─── */
+.toast{position:fixed;bottom:1.5rem;right:1.5rem;padding:.72rem 1.3rem;font-size:.82rem;z-index:999;opacity:0;transform:translateY(6px);transition:all .3s;pointer-events:none;background:var(--text);color:#fff;box-shadow:0 4px 12px rgba(0,0,0,.15);}
+.toast.show{opacity:1;transform:translateY(0);}
+
+/* ─── MODAL ─── */
+.ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:50;align-items:center;justify-content:center;}
+.ov.open{display:flex;}
+.modal{background:var(--s1);border:1px solid var(--border);padding:1.8rem;width:440px;max-height:85vh;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,.12);}
+.modal h3{font-family:'Lora',serif;font-size:1.15rem;color:var(--gold);margin-bottom:1.4rem;}
+.mf{display:flex;justify-content:flex-end;gap:.5rem;margin-top:1.3rem;padding-top:.9rem;border-top:1px solid var(--border);}
+.ts-btn{padding:.42rem .3rem;background:var(--s2);border:1px solid var(--border);color:var(--muted);font-family:'Be Vietnam Pro',sans-serif;font-size:.72rem;cursor:pointer;transition:all .15s;text-align:center;line-height:1.3;}
+.ts-btn:hover{border-color:var(--gold);color:var(--text);}
+.ts-btn.sel{background:var(--gold);border-color:var(--gold);color:#fff;font-weight:600;}
+.ts-btn.taken{opacity:.35;cursor:not-allowed;text-decoration:line-through;}
+
+/* ─── CLASS MANAGEMENT ─── */
+.cls-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem;margin-bottom:1.5rem;}
+.cls-card{background:var(--s1);border:1px solid var(--border);padding:1.1rem 1.2rem;border-radius:2px;cursor:pointer;transition:all .18s;box-shadow:0 1px 3px rgba(0,0,0,.05);position:relative;}
+.cls-card:hover{border-color:var(--gold);box-shadow:0 3px 10px rgba(176,125,26,.1);}
+.cls-card.active{border-color:var(--gold);border-left:3px solid var(--gold);background:var(--glow);}
+.cls-card-name{font-family:'Lora',serif;font-size:1rem;font-weight:600;color:var(--text);margin-bottom:.3rem;}
+.cls-card-desc{font-size:.75rem;color:var(--muted);margin-bottom:.7rem;min-height:1.2em;}
+.cls-card-meta{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;}
+.cls-badge{font-size:.62rem;font-weight:600;padding:.13rem .48rem;background:rgba(176,125,26,.1);color:var(--gold);border:1px solid rgba(176,125,26,.25);}
+.cls-rm-btn{position:absolute;top:.6rem;right:.6rem;background:none;border:none;color:var(--muted);cursor:pointer;font-size:.9rem;padding:.15rem;transition:color .15s;line-height:1;}
+.cls-rm-btn:hover{color:var(--rust);}
+.cls-detail{background:var(--s1);border:1px solid var(--border);padding:1.3rem;margin-bottom:1.3rem;border-radius:2px;}
+.cls-detail-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.1rem;}
+.cls-detail-title{font-family:'Lora',serif;font-size:1.15rem;color:var(--gold);}
+.cls-sv-tags{display:flex;flex-wrap:wrap;gap:.45rem;margin-bottom:1rem;}
+.cls-sv-tag{display:flex;align-items:center;gap:.35rem;background:var(--s2);border:1px solid var(--border);padding:.3rem .65rem;font-size:.77rem;color:var(--text);}
+.cls-sv-tag button{background:none;border:none;color:var(--muted);cursor:pointer;font-size:.8rem;line-height:1;padding:0;transition:color .12s;}
+.cls-sv-tag button:hover{color:var(--rust);}
+.cls-sv-empty{font-size:.78rem;color:var(--muted);font-style:italic;padding:.5rem 0;}
+.cls-hw-sheet{background:var(--s2);border:1px solid var(--border);padding:.9rem 1rem;margin-bottom:.55rem;}
+.cls-hw-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem;}
+.cls-hw-date{font-family:'JetBrains Mono',monospace;font-size:.77rem;color:var(--gold);}
+.cls-hw-label{font-size:.82rem;font-weight:600;color:var(--text);}
+.cls-hw-sv-list{display:flex;flex-direction:column;gap:.3rem;margin-top:.55rem;border-top:1px solid var(--line);padding-top:.55rem;}
+.cls-hw-sv-row{display:flex;align-items:center;gap:.55rem;font-size:.78rem;}
+.cls-hw-sv-name{flex:1;color:var(--text);}
+.cls-hw-sv-status{font-size:.7rem;}
+.cls-hw-sv-status.done{color:var(--sage);font-weight:600;}
+.cls-hw-sv-status.pending{color:var(--muted);font-style:italic;}
+.add-sv-to-cls{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-top:.55rem;padding-top:.55rem;border-top:1px solid var(--line);}
+.add-sv-to-cls select{flex:1;min-width:150px;padding:.42rem .6rem;background:var(--s2);border:1px solid var(--border);color:var(--text);font-family:'Be Vietnam Pro',sans-serif;font-size:.8rem;outline:none;}
+.add-sv-to-cls select:focus{border-color:var(--gold);}
+.cls-hw-prog-bar{height:4px;background:var(--line);margin:.4rem 0 .1rem;}
+.cls-hw-prog-fill{height:100%;background:linear-gradient(90deg,var(--sage),var(--gold));transition:width .4s;}
+</style>
+</head>
+<body>
+
+<!-- ═══ SIDEBAR ═══ -->
+<div class="sb">
+  <div class="sb-top">
+    <div class="sb-logo">📖 Teacher Panel</div>
+    <div class="sb-sub">Quản lý khoá học TOEIC</div>
+  </div>
+  <div class="sb-nav">
+    <div class="nv on" id="nv-dash"    onclick="showPg('dash',this)">📊 Tổng quan</div>
+    <div class="nv"    id="nv-scores"  onclick="showPg('scores',this)">🎯 Duyệt điểm <span class="cnt" id="score-cnt" style="display:none">0</span></div>
+    <div class="nv"    id="nv-classes" onclick="showPg('classes',this)">🏫 Lớp học</div>
+    <div class="nv"    id="nv-books"   onclick="showPg('books',this)">📅 Lịch book 1-1</div>
+    <div class="nv"    id="nv-slots"   onclick="showPg('slots',this)">⏰ Khung giờ</div>
+  </div>
+  <div class="sb-students">
+    <div class="sb-lbl">Học viên</div>
+    <div id="sv-list"></div>
+  </div>
+  <div class="sb-bottom">
+    <button class="btn-add" onclick="openM('m-add-sv')">+ Thêm học viên</button>
+  </div>
+</div>
+
+<!-- ═══ MAIN ═══ -->
+<div class="mn">
+  <div class="tbar">
+    <div class="tbar-l">
+      <h2 id="tb-title">Tổng quan</h2>
+      <div class="sub" id="tb-sub"></div>
+    </div>
+    <div class="tbar-r" id="tb-acts"></div>
+  </div>
+
+  <div class="cnt-area">
+
+    <!-- DASHBOARD -->
+    <div class="pg on" id="pg-dash">
+      <div class="stats-row">
+        <div class="stat-c"><div class="stat-n" id="st-sv">0</div><div class="stat-l">Học viên</div></div>
+        <div class="stat-c"><div class="stat-n" id="st-tasks">0</div><div class="stat-l">Hoàn thành hôm nay</div></div>
+        <div class="stat-c"><div class="stat-n" id="st-pend">0</div><div class="stat-l">Lịch chờ duyệt</div></div>
+      </div>
+      <div class="card">
+        <div class="card-hd">📊 Tiến độ nhiệm vụ hôm nay</div>
+        <div id="dash-progress"></div>
+      </div>
+      <div class="card">
+        <div class="card-hd" style="color:var(--rust)">⚠️ Chưa hoàn thành hôm qua</div>
+        <div id="dash-lagging"></div>
+      </div>
+    </div>
+
+    <!-- SCORE REVIEW -->
+    <div class="pg" id="pg-scores">
+      <div class="card">
+        <div class="card-hd">⏳ Chờ duyệt</div>
+        <div id="sr-pend"></div>
+      </div>
+      <div class="card">
+        <div class="card-hd">✅ Đã xử lý</div>
+        <div id="sr-done"></div>
+      </div>
+    </div>
+
+    <!-- BOOKINGS -->
+    <div class="pg" id="pg-books">
+      <div class="card">
+        <div class="card-hd">⏳ Chờ duyệt</div>
+        <div id="bk-pend"></div>
+      </div>
+      <div class="card">
+        <div class="card-hd">✅ Đã xử lý</div>
+        <div id="bk-done"></div>
+      </div>
+    </div>
+
+    <!-- SLOTS -->
+    <div class="pg" id="pg-slots">
+      <div class="card">
+        <div class="card-hd">
+          <span>Khung giờ trống — học viên có thể book</span>
+          <button class="btn bg" onclick="openM('m-add-slot')">+ Thêm khung giờ</button>
+        </div>
+        <div id="slot-list"></div>
+      </div>
+    </div>
+
+    <!-- CLASSES -->
+    <div class="pg" id="pg-classes">
+      <!-- No class selected: show grid -->
+      <div id="cls-overview">
+        <div class="card">
+          <div class="card-hd">
+            <span>Danh sách lớp học</span>
+            <button class="btn bp" onclick="openM('m-add-cls')">+ Tạo lớp mới</button>
+          </div>
+          <div class="cls-grid" id="cls-grid"></div>
+        </div>
+      </div>
+      <!-- Class detail -->
+      <div id="cls-detail-wrap" style="display:none;">
+        <div style="margin-bottom:.8rem;">
+          <button class="btn bg" onclick="exitClsDetail()" style="font-size:.76rem;">← Danh sách lớp</button>
+        </div>
+        <div class="cls-detail">
+          <div class="cls-detail-hd">
+            <div>
+              <div class="cls-detail-title" id="cls-d-name"></div>
+              <div style="font-size:.74rem;color:var(--muted);margin-top:.2rem" id="cls-d-desc"></div>
+            </div>
+            <div style="display:flex;gap:.5rem;">
+              <button class="btn bp" onclick="openClsHwModal()">+ Giao BTVN lớp</button>
+              <button class="btn bg" onclick="openEditClsModal()">✏️ Sửa lớp</button>
+            </div>
+          </div>
+          <!-- Members -->
+          <div style="font-size:.67rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:.55rem;">👥 Thành viên</div>
+          <div class="cls-sv-tags" id="cls-d-members"></div>
+          <div class="add-sv-to-cls">
+            <select id="cls-add-sv-sel"><option value="">— Thêm học viên vào lớp —</option></select>
+            <button class="btn bp" style="font-size:.76rem;padding:.4rem .85rem;" onclick="addSvToClass()">Thêm</button>
+          </div>
+        </div>
+        <!-- Class HW -->
+        <div class="card">
+          <div class="card-hd">📋 BTVN của lớp</div>
+          <div id="cls-hw-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STUDENT EDITOR -->
+    <div class="pg" id="pg-sv">
+      <div class="two-col">
+        <!-- LEFT -->
+        <div>
+          <div class="card">
+            <div class="card-hd">👤 Thông tin cơ bản</div>
+            <div class="fl"><label>Họ và tên</label><input id="f-name" type="text"></div>
+            <div class="fl-row">
+              <div class="fl"><label>Mã học viên</label><input id="f-id" type="text"></div>
+              <div class="fl"><label>Tuần hiện tại</label><input id="f-week" type="number" min="1"></div>
+            </div>
+            <div class="fl"><label>Nhận xét / Ghi chú</label><textarea id="f-note"></textarea></div>
+          </div>
+
+          <div class="card">
+            <div class="card-hd">📊 Tiến độ nhiệm vụ</div>
+            <div id="sv-progress-list"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-hd"><span>🎯 Điểm TOEIC</span><button class="btn bg" onclick="openM('m-score')">+ Thêm</button></div>
+            <div id="score-list"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-hd">🔗 Link học viên</div>
+            <div class="link-box"><div class="link-url" id="sv-link"></div><button class="link-cp" onclick="cpLink()">Copy</button></div>
+            <div style="font-size:.72rem;color:var(--muted)">Gửi link này cho học viên. Họ nhập mã để đăng nhập.</div>
+          </div>
+        </div>
+
+        <!-- RIGHT -->
+        <div>
+          <div class="card">
+            <div class="card-hd"><span>📚 Học phần (tuần + module)</span><button class="btn bg" onclick="openM('m-mod')">+ Thêm</button></div>
+            <div id="mod-list"></div>
+          </div>
+          <div class="card">
+            <div class="card-hd"><span>📋 BTVN (Bài tập về nhà)</span><button class="btn bg" onclick="openM('m-hw')">+ Thêm ngày</button></div>
+            <div id="hw-list"></div>
+          </div>
+          <div class="card">
+            <div class="card-hd"><span>📅 Lịch học</span><button class="btn bg" onclick="openM('m-sched')">+ Thêm</button></div>
+            <div id="sched-list"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══ MODALS ═══ -->
+<div class="ov" id="m-add-sv">
+  <div class="modal">
+    <h3>Thêm học viên mới</h3>
+    <div class="fl"><label>Họ và tên</label><input id="ns-name" type="text" placeholder="Nguyễn Thị Mai"></div>
+    <div class="fl"><label>Mã học viên</label><input id="ns-id" type="text" placeholder="HV002"></div>
+    <div class="mf"><button class="btn bg" onclick="closeM('m-add-sv')">Huỷ</button><button class="btn bp" onclick="addSv()">Thêm</button></div>
+  </div>
+</div>
+
+<div class="ov" id="m-score">
+  <div class="modal">
+    <h3>Thêm điểm TOEIC</h3>
+    <div class="fl"><label>Điểm (0–990)</label><input id="nc-score" type="number" min="0" max="990" placeholder="650"></div>
+    <div class="fl"><label>Ngày kiểm tra</label><input id="nc-date" type="date"></div>
+    <div class="mf"><button class="btn bg" onclick="closeM('m-score')">Huỷ</button><button class="btn bp" onclick="addScore()">Thêm</button></div>
+  </div>
+</div>
+
+<div class="ov" id="m-mod">
+  <div class="modal">
+    <h3>Thêm học phần</h3>
+    <div class="fl"><label>Tên học phần</label><input id="nm-name" type="text" placeholder="Listening Part 1-2"></div>
+    <div class="fl-row">
+      <div class="fl"><label>Tuần số</label><input id="nm-week" type="number" min="1" placeholder="1"></div>
+      <div class="fl"><label>Tên tuần</label><input id="nm-wkt" type="text" placeholder="Nền tảng"></div>
+    </div>
+    <div class="fl-row">
+      <div class="fl"><label>Loại</label>
+        <select id="nm-type"><option>Listening</option><option>Reading</option><option>Grammar</option><option>Vocab</option><option>Writing</option></select>
+      </div>
+      <div class="fl"><label>Trạng thái</label>
+        <select id="nm-st"><option value="locked">Chưa học</option><option value="current">Đang học</option><option value="done">Hoàn thành</option></select>
+      </div>
+    </div>
+    <div class="mf"><button class="btn bg" onclick="closeM('m-mod')">Huỷ</button><button class="btn bp" onclick="addMod()">Thêm</button></div>
+  </div>
+</div>
+
+<div class="ov" id="m-hw">
+  <div class="modal" style="width:560px;max-width:95vw;">
+    <h3 id="m-hw-title">📋 Thêm BTVN</h3>
+    <div class="fl-row">
+      <div class="fl"><label>Ngày bắt đầu</label><input id="hw-date" type="date"></div>
+      <div class="fl"><label>Ngày kết thúc <span style="font-weight:400;opacity:.6">(để trống = 1 ngày)</span></label><input id="hw-date-to" type="date"></div>
+    </div>
+    <div class="fl"><label>Tiêu đề (tuỳ chọn)</label><input id="hw-label" type="text" placeholder="VD: Ôn tập tuần 3"></div>
+
+    <!-- 4 SECTIONS -->
+    <div style="display:grid;gap:.9rem;margin-top:.4rem;">
+      <!-- TỪ VỰNG -->
+      <div style="background:var(--s2);border:1px solid var(--border);padding:.85rem;">
+        <div style="font-size:.67rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#C9963A;margin-bottom:.6rem;">📗 Từ vựng</div>
+        <div id="hw-vocab-items"></div>
+        <button class="btn bg" style="width:100%;margin-top:.4rem;font-size:.73rem;" onclick="addHwItem('vocab')">+ Thêm mục</button>
+      </div>
+      <!-- ĐỌC -->
+      <div style="background:var(--s2);border:1px solid var(--border);padding:.85rem;">
+        <div style="font-size:.67rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#4A9B5E;margin-bottom:.6rem;">📘 Đọc</div>
+        <div id="hw-reading-items"></div>
+        <button class="btn bg" style="width:100%;margin-top:.4rem;font-size:.73rem;" onclick="addHwItem('reading')">+ Thêm mục</button>
+      </div>
+      <!-- NGHE -->
+      <div style="background:var(--s2);border:1px solid var(--border);padding:.85rem;">
+        <div style="font-size:.67rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#3B82C4;margin-bottom:.6rem;">📙 Nghe</div>
+        <div id="hw-listening-items"></div>
+        <button class="btn bg" style="width:100%;margin-top:.4rem;font-size:.73rem;" onclick="addHwItem('listening')">+ Thêm mục</button>
+      </div>
+      <!-- KHÁC -->
+      <div style="background:var(--s2);border:1px solid var(--border);padding:.85rem;">
+        <div style="font-size:.67rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#A07040;margin-bottom:.6rem;">⭐ Khác</div>
+        <div id="hw-other-items"></div>
+        <button class="btn bg" style="width:100%;margin-top:.4rem;font-size:.73rem;" onclick="addHwItem('other')">+ Thêm mục</button>
+      </div>
+      <!-- ĐỀ LUYỆN -->
+      <div style="background:#f0f4ff;border:1px solid #c5d0ee;padding:.85rem;">
+        <div style="font-size:.67rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#2457A0;margin-bottom:.3rem;">📝 Đề luyện thi</div>
+        <div style="font-size:.7rem;color:#6070a0;margin-bottom:.6rem;">Học viên mở đề → làm bài → nộp link → nhập điểm ở Tab Điểm số</div>
+        <div id="hw-practice-items"></div>
+        <button class="btn bg" style="width:100%;margin-top:.4rem;font-size:.73rem;border-color:#c5d0ee!important;color:#2457A0;" onclick="addHwItem('practice')">+ Thêm đề luyện</button>
+      </div>
+    </div>
+
+    <div class="mf"><button class="btn bg" onclick="closeHwModal()">Huỷ</button><button class="btn bp" onclick="saveHw()">Lưu BTVN</button></div>
+  </div>
+</div>
+
+<div class="ov" id="m-sched">
+  <div class="modal">
+    <h3>Thêm lịch học</h3>
+    <div class="fl"><label>Tiêu đề</label><input id="nsc-title" type="text" placeholder="Lớp học tuần 4"></div>
+    <div class="fl-row">
+      <div class="fl"><label>Ngày</label><input id="nsc-date" type="date"></div>
+      <div class="fl"><label>Giờ</label><input id="nsc-time" type="text" placeholder="19:00–21:00"></div>
+    </div>
+    <div class="mf"><button class="btn bg" onclick="closeM('m-sched')">Huỷ</button><button class="btn bp" onclick="addSched()">Thêm</button></div>
+  </div>
+</div>
+
+<div class="ov" id="m-add-slot">
+  <div class="modal">
+    <h3>Thêm khung giờ trống</h3>
+    <div class="fl"><label>Ngày</label><input id="sl-date" type="date"></div>
+    <div class="fl">
+      <label>Khung giờ (1 tiếng)</label>
+      <div id="sl-time-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:.4rem;margin-top:.2rem;"></div>
+      <input type="hidden" id="sl-time">
+    </div>
+    <div class="fl"><label>Ghi chú (địa điểm / hình thức)</label><input id="sl-note" type="text" placeholder="Zalo / Zoom hoặc địa chỉ offline"></div>
+    <div class="mf"><button class="btn bg" onclick="closeM('m-add-slot')">Huỷ</button><button class="btn bp" onclick="addSlot()">Thêm</button></div>
+  </div>
+</div>
+
+<!-- ADD CLASS MODAL -->
+<div class="ov" id="m-add-cls">
+  <div class="modal">
+    <h3>Tạo lớp học mới</h3>
+    <div class="fl"><label>Tên lớp</label><input id="nc-cls-name" type="text" placeholder="VD: Lớp TOEIC T4/2025"></div>
+    <div class="fl"><label>Mô tả (tuỳ chọn)</label><input id="nc-cls-desc" type="text" placeholder="VD: Học 3 buổi/tuần, trình độ cơ bản"></div>
+    <div class="mf"><button class="btn bg" onclick="closeM('m-add-cls')">Huỷ</button><button class="btn bp" onclick="addClass()">Tạo lớp</button></div>
+  </div>
+</div>
+<!-- EDIT CLASS MODAL -->
+<div class="ov" id="m-edit-cls">
+  <div class="modal">
+    <h3>Sửa thông tin lớp</h3>
+    <div class="fl"><label>Tên lớp</label><input id="ec-cls-name" type="text"></div>
+    <div class="fl"><label>Mô tả</label><input id="ec-cls-desc" type="text"></div>
+    <div class="mf"><button class="btn bg" onclick="closeM('m-edit-cls')">Huỷ</button><button class="btn bp" onclick="saveEditClass()">Lưu</button></div>
+  </div>
+</div>
+<!-- CLASS HW MODAL -->
+<div class="ov" id="m-cls-hw">
+  <div class="modal" style="width:580px;max-width:95vw;">
+    <h3 id="m-cls-hw-title">📋 Giao BTVN cho lớp</h3>
+    <div class="fl-row">
+      <div class="fl"><label>Ngày bắt đầu</label><input id="cls-hw-date" type="date"></div>
+      <div class="fl"><label>Ngày kết thúc <span style="font-weight:400;opacity:.6">(để trống = 1 ngày)</span></label><input id="cls-hw-date-to" type="date"></div>
+    </div>
+    <div class="fl"><label>Tiêu đề (tuỳ chọn)</label><input id="cls-hw-label" type="text" placeholder="VD: Ngày 28/3"></div>
+    <div style="display:grid;gap:.9rem;margin-top:.4rem;">
+      <div style="background:var(--s2);border:1px solid var(--border);padding:.85rem;">
+        <div style="font-size:.67rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#C9963A;margin-bottom:.6rem;">📗 Từ vựng</div>
+        <div id="cls-hw-vocab-items"></div>
+        <button class="btn bg" style="width:100%;margin-top:.4rem;font-size:.73rem;" onclick="addClsHwItem('vocab')">+ Thêm mục</button>
+      </div>
+      <div style="background:var(--s2);border:1px solid var(--border);padding:.85rem;">
+        <div style="font-size:.67rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#4A9B5E;margin-bottom:.6rem;">📘 Đọc</div>
+        <div id="cls-hw-reading-items"></div>
+        <button class="btn bg" style="width:100%;margin-top:.4rem;font-size:.73rem;" onclick="addClsHwItem('reading')">+ Thêm mục</button>
+      </div>
+      <div style="background:var(--s2);border:1px solid var(--border);padding:.85rem;">
+        <div style="font-size:.67rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#3B82C4;margin-bottom:.6rem;">📙 Nghe</div>
+        <div id="cls-hw-listening-items"></div>
+        <button class="btn bg" style="width:100%;margin-top:.4rem;font-size:.73rem;" onclick="addClsHwItem('listening')">+ Thêm mục</button>
+      </div>
+      <div style="background:var(--s2);border:1px solid var(--border);padding:.85rem;">
+        <div style="font-size:.67rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#A07040;margin-bottom:.6rem;">⭐ Khác</div>
+        <div id="cls-hw-other-items"></div>
+        <button class="btn bg" style="width:100%;margin-top:.4rem;font-size:.73rem;" onclick="addClsHwItem('other')">+ Thêm mục</button>
+      </div>
+      <div style="background:#f0f4ff;border:1px solid #c5d0ee;padding:.85rem;">
+        <div style="font-size:.67rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#2457A0;margin-bottom:.3rem;">📝 Đề luyện thi</div>
+        <div id="cls-hw-practice-items"></div>
+        <button class="btn bg" style="width:100%;margin-top:.4rem;font-size:.73rem;border-color:#c5d0ee!important;color:#2457A0;" onclick="addClsHwItem('practice')">+ Thêm đề luyện</button>
+      </div>
+    </div>
+    <div class="mf"><button class="btn bg" onclick="closeClsHwModal()">Huỷ</button><button class="btn bp" onclick="saveClsHw()">Giao cho cả lớp</button></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Firebase compat SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script>
+/* ═══ FIREBASE CONFIG ═══ */
+var firebaseConfig = {
+  apiKey: "AIzaSyCFg5Jro1wbtyWZ8YJ_osZqn95IFjRIKdg",
+  authDomain: "quanlyhocvien-b1796.firebaseapp.com",
+  databaseURL: "https://quanlyhocvien-b1796-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "quanlyhocvien-b1796",
+  storageBucket: "quanlyhocvien-b1796.firebasestorage.app",
+  messagingSenderId: "587798050132",
+  appId: "1:587798050132:web:92f0ba707806cfb1b384c1"
+};
+firebase.initializeApp(firebaseConfig);
+var db = firebase.database();
+
+/* ═══ STATE ═══ */
+var CID = null;
+var allStudents = {};
+var allBookings = {};
+var allSlots    = {};
+var allScoreReqs = {};
+var allProgress  = {};
+var allSubs      = {};
+var allGoals     = {};
+var allDayLinks  = {};
+
+/* ═══ HELPERS ═══ */
+function today(){ return new Date().toISOString().split('T')[0]; }
+function fmtD(s){ return new Date(s+'T00:00:00').toLocaleDateString('vi-VN',{weekday:'short',day:'numeric',month:'numeric'}); }
+function fmtDate(s){ if(!s) return ''; var p=s.split('-'); return p[2]+'/'+p[1]; }
+function fmtTimeT(iso){
+  if(!iso) return '';
+  var d=new Date(iso);
+  return d.toLocaleDateString('vi-VN',{day:'numeric',month:'numeric'})+' '+d.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'});
+}
+function escHtml(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
+function toast(m,ok){
+  if(ok===undefined) ok=true;
+  var t=document.getElementById('toast');
+  t.style.background=ok?'#4A9B5E':'#C24B2A';
+  t.textContent=m; t.classList.add('show');
+  setTimeout(function(){t.classList.remove('show');},2800);
+}
+function openM(id){
+  document.getElementById(id).classList.add('open');
+  if(id==='m-add-slot') initSlotGrid();
+}
+function closeM(id){ document.getElementById(id).classList.remove('open'); }
+
+function initSlotGrid(){
+  var grid=document.getElementById('sl-time-grid');
+  if(!grid) return;
+  var dateEl=document.getElementById('sl-date');
+  var selectedDate=dateEl?dateEl.value:'';
+  // Lấy các slot đã được book trong ngày đó
+  var takenTimes={};
+  if(selectedDate){
+    Object.values(allSlots).forEach(function(sl){
+      if(sl.date===selectedDate){
+        var taken=Object.values(allBookings).some(function(b){return b.slotId===sl.id&&b.status!=='declined';});
+        if(taken) takenTimes[sl.time]=true;
+      }
+    });
+  }
+  grid.innerHTML='';
+  document.getElementById('sl-time').value='';
+  for(var h=7;h<=23;h++){
+    var start=(h<10?'0':'')+h+':00';
+    var end=h===23?'24:00':((h+1<10?'0':'')+(h+1)+':00');
+    var label=start+'–'+end;
+    var isTaken=takenTimes[label]||false;
+    var btn=document.createElement('button');
+    btn.type='button';
+    btn.className='ts-btn'+(isTaken?' taken':'');
+    btn.textContent=label;
+    btn.dataset.time=label;
+    if(!isTaken) btn.onclick=function(){
+      document.querySelectorAll('.ts-btn').forEach(function(b){b.classList.remove('sel');});
+      this.classList.add('sel');
+      document.getElementById('sl-time').value=this.dataset.time;
+    };
+    grid.appendChild(btn);
+  }
+  // Khi đổi ngày thì refresh grid
+  if(dateEl && !dateEl._slotHooked){
+    dateEl._slotHooked=true;
+    dateEl.addEventListener('change', function(){ initSlotGrid(); });
+  }
+}
+document.querySelectorAll('.ov').forEach(function(o){
+  o.addEventListener('click',function(e){ if(e.target===o) o.classList.remove('open'); });
+});
+
+/* ═══ FIREBASE LISTENERS ═══ */
+db.ref('students').on('value', function(snap){
+  allStudents = snap.val() || {};
+  renderSB(); renderDash();
+  if(CID && allStudents[CID]) loadSvPage(CID);
+});
+db.ref('bookings').on('value', function(snap){
+  allBookings = snap.val() || {};
+  updateNavBadges();
+  if(document.getElementById('pg-books').classList.contains('on')) renderBooks();
+});
+db.ref('slots').on('value', function(snap){
+  allSlots = snap.val() || {};
+  if(document.getElementById('pg-slots').classList.contains('on')) renderSlots();
+});
+db.ref('scoreRequests').on('value', function(snap){
+  allScoreReqs = snap.val() || {};
+  updateNavBadges();
+  if(document.getElementById('pg-scores').classList.contains('on')) renderScoreReviews();
+});
+db.ref('progress').on('value', function(snap){
+  allProgress = snap.val() || {};
+  if(document.getElementById('pg-dash').classList.contains('on')) renderDash();
+});
+db.ref('submissions').on('value', function(snap){
+  allSubs = snap.val() || {};
+  if(CID && document.getElementById('hw-list')) renderHw(allStudents[CID] ? (allStudents[CID].homework||[]) : []);
+});
+db.ref('goals').on('value', function(snap){
+  allGoals = snap.val() || {};
+  if(document.getElementById('pg-dash').classList.contains('on')) renderDash();
+});
+db.ref('daylinks').on('value', function(snap){
+  allDayLinks = snap.val() || {};
+  if(CID && document.getElementById('hw-list')) renderHw(allStudents[CID]?(allStudents[CID].homework||[]):[]);
+});
+
+/* ═══ SIDEBAR ═══ */
+function renderSB(){
+  var el=document.getElementById('sv-list');
+  var students=Object.values(allStudents);
+  if(!students.length){ el.innerHTML='<div style="font-size:.73rem;color:var(--muted);padding:.4rem 1.1rem">Chưa có học viên</div>'; return; }
+  el.innerHTML='';
+  students.forEach(function(s){
+    var item=document.createElement('div');
+    item.className='sv-item'+(s.id===CID?' on':'');
+    item.innerHTML='<div class="sv-av">'+s.name.charAt(0)+'</div><div><div class="sv-name">'+s.name+'</div><div class="sv-id">'+s.id+'</div></div>';
+    item.onclick=function(){ selSv(s.id); };
+    el.appendChild(item);
+  });
+}
+
+/* ═══ PAGES ═══ */
+function showPg(name, el){
+  document.querySelectorAll('.pg').forEach(function(p){ p.classList.remove('on'); });
+  document.querySelectorAll('.nv').forEach(function(n){ n.classList.remove('on'); });
+  document.getElementById('pg-'+name).classList.add('on');
+  if(el) el.classList.add('on');
+  var titles={dash:'Tổng quan',scores:'Duyệt điểm học viên',books:'Lịch book 1-1',slots:'Khung giờ trống',classes:'🏫 Lớp học'};
+  document.getElementById('tb-title').textContent=titles[name]||'';
+  document.getElementById('tb-sub').textContent='';
+  document.getElementById('tb-acts').innerHTML='';
+  if(name==='dash')    renderDash();
+  if(name==='scores')  renderScoreReviews();
+  if(name==='books')   renderBooks();
+  if(name==='slots')   renderSlots();
+  if(name==='classes'){ CLS_ID=null; exitClsDetail(); renderClsGrid(); }
+}
+
+function selSv(id){
+  CID=id; renderSB(); loadSvPage(id);
+  document.querySelectorAll('.pg').forEach(function(p){ p.classList.remove('on'); });
+  document.querySelectorAll('.nv').forEach(function(n){ n.classList.remove('on'); });
+  document.getElementById('pg-sv').classList.add('on');
+  var s=allStudents[id];
+  document.getElementById('tb-title').textContent=s?s.name:'Học viên';
+  document.getElementById('tb-sub').textContent=s?'ID: '+s.id:'';
+  document.getElementById('tb-acts').innerHTML=
+    '<button class="btn bd" onclick="delSv()">Xoá</button>'+
+    '<button class="btn bp" onclick="saveSv()">Lưu tất cả</button>';
+}
+
+function loadSvPage(id){
+  var s=allStudents[id]; if(!s) return;
+  document.getElementById('f-name').value=s.name||'';
+  document.getElementById('f-id').value=s.id||'';
+  document.getElementById('f-week').value=s.currentWeek||'';
+  document.getElementById('f-note').value=s.note||'';
+  var base=window.location.href.replace('teacher.html','student.html').replace(/\?.*$/,'');
+  document.getElementById('sv-link').textContent=base+'?auto='+s.id;
+  renderScores(s.scores||[]);
+  renderSvProgress(s);
+  renderMods(s.modules||[]);
+  renderHw(s.homework||[]);
+  renderSched(s.schedule||[]);
+}
+
+/* ═══ NAV BADGES ═══ */
+function updateNavBadges(){
+  var books=Object.values(allBookings);
+  var pend=books.filter(function(b){ return b.status==='pending'; }).length;
+  var pendScores=Object.values(allScoreReqs).filter(function(r){ return r.status==='pending'; }).length;
+  var nv=document.getElementById('nv-books');
+  if(nv) nv.innerHTML='📅 Lịch book 1-1'+(pend?'<span class="cnt">'+pend+'</span>':'');
+  var scEl=document.getElementById('score-cnt');
+  if(scEl){ if(pendScores){scEl.style.display='inline';scEl.textContent=pendScores;}else scEl.style.display='none'; }
+  var nvSc=document.getElementById('nv-scores');
+  if(nvSc) nvSc.innerHTML='🎯 Duyệt điểm'+(pendScores?'<span class="cnt">'+pendScores+'</span>':'');
+}
+
+/* ═══ DASHBOARD ═══ */
+function renderDash(){
+  updateNavBadges();
+  var students=Object.values(allStudents);
+  var books=Object.values(allBookings);
+  var td=today();
+  var yesterday=new Date(Date.now()-86400000).toISOString().split('T')[0];
+  var fullyDone=0;
+  students.forEach(function(s){
+    var todayHw=(s.homework||[]).find(function(h){return h.date===td;});
+    if(todayHw){
+      var linked=allDayLinks[s.id]&&allDayLinks[s.id][todayHw.id];
+      if(linked) fullyDone++;
+    }
+  });
+  var pend=books.filter(function(b){ return b.status==='pending'; }).length;
+  var svEl=document.getElementById('st-sv'); if(svEl) svEl.textContent=students.length;
+  var tkEl=document.getElementById('st-tasks'); if(tkEl) tkEl.textContent=fullyDone+'/'+students.length;
+  var pdEl=document.getElementById('st-pend'); if(pdEl) pdEl.textContent=pend;
+
+  var dpEl=document.getElementById('dash-progress');
+  if(!dpEl) return;
+  dpEl.innerHTML='';
+  if(!students.length){ dpEl.innerHTML='<div class="empty">Chưa có học viên</div>'; }
+  else students.forEach(function(s){
+    var hw=(s.homework||[]).find(function(h){ return h.date===td; });
+    var total=hw?countHwItemsT(hw):0;
+    var linked=hw?(allDayLinks[s.id]&&allDayLinks[s.id][hw.id]):null;
+    var isFull=!!(linked);
+    var pct=isFull?100:0;
+    var goal=allGoals[s.id];
+    var latestScore=(s.scores&&s.scores.length)?s.scores[s.scores.length-1].score:null;
+    var goalHtml='';
+    if(goal&&goal.target){
+      var gap=latestScore!==null?goal.target-latestScore:null;
+      var gapTxt=gap!==null?(gap>0?'còn '+gap+'đ':'✓ Đạt!'):'chưa có điểm';
+      var dlTxt=goal.deadline?new Date(goal.deadline+'-01').toLocaleDateString('vi-VN',{month:'short',year:'numeric'}):'';
+      var gapColor=gap!==null&&gap<=0?'var(--sage)':'var(--gold)';
+      goalHtml='<div style="display:flex;align-items:center;gap:.4rem;flex-shrink:0;">'
+        +'<span style="font-size:.62rem;color:var(--muted)">Mục tiêu:</span>'
+        +'<span style="font-family:\'Lora\',serif;font-size:.95rem;font-weight:700;color:'+gapColor+'">'+goal.target+'</span>'
+        +'<span style="font-size:.65rem;color:'+gapColor+'">'+gapTxt+'</span>'
+        +(dlTxt?'<span style="font-size:.62rem;color:var(--muted)">· 📅 '+dlTxt+'</span>':'')
+        +'</div>';
+    }
+    var statusHtml=isFull
+      ?'<span style="font-size:.68rem;color:var(--sage);font-weight:600">✓ Đã nộp link</span>'
+      :(total?'<span style="font-size:.68rem;color:var(--muted)">Chưa nộp</span>':'<span style="font-size:.68rem;color:var(--muted)">Không có BTVN</span>');
+    var row=document.createElement('div'); row.className='prog-row'; row.style.flexWrap='wrap'; row.style.gap='.4rem';
+    row.innerHTML='<div class="prog-sv-name">'+s.name+' <span style="opacity:.4;font-size:.68rem">'+s.id+'</span></div>'+
+      '<div class="prog-bar-wrap"><div class="prog-bar"><div class="prog-fill'+(isFull?' full':'')+'" style="width:'+pct+'%"></div></div></div>'+
+      '<div class="prog-pct'+(isFull?' full':'')+'">'+( isFull?'✓ 100%':'—')+'</div>'+
+      statusHtml+goalHtml;
+    dpEl.appendChild(row);
+  });
+
+  var lagEl=document.getElementById('dash-lagging');
+  if(!lagEl) return;
+  lagEl.innerHTML='';
+  var lagging=[];
+  students.forEach(function(s){
+    var hw=(s.homework||[]).find(function(h){ return h.date===yesterday; });
+    if(!hw) return;
+    var total=countHwItemsT(hw); if(!total) return;
+    var p=allProgress[s.id]&&allProgress[s.id][yesterday];
+    var done=p?Math.min(p.done,total):0;
+    if(done<total) lagging.push({s:s,done:done,total:total,pct:Math.round(done/total*100)});
+  });
+  if(!lagging.length){ lagEl.innerHTML='<div class="empty">🎉 Tất cả học viên đã hoàn thành nhiệm vụ hôm qua!</div>'; }
+  else lagging.forEach(function(item){
+    var row=document.createElement('div'); row.className='prog-row prog-lag';
+    row.innerHTML='<div class="prog-sv-name">'+item.s.name+' <span style="opacity:.5;font-size:.68rem">'+item.s.id+'</span></div>'+
+      '<div class="prog-bar-wrap"><div class="prog-bar"><div class="prog-fill" style="width:'+item.pct+'%;background:var(--rust)"></div></div></div>'+
+      '<div class="prog-pct" style="color:var(--rust)">'+item.pct+'%</div>'+
+      '<div class="prog-date">'+item.done+'/'+item.total+' mục · '+yesterday+'</div>';
+    lagEl.appendChild(row);
+  });
+}
+function countHwItemsT(hw){
+  var secs=['vocab','reading','listening','other','practice']; var n=0;
+  secs.forEach(function(s){ n+=(hw[s]||[]).length; }); return n;
+}
+function renderSvProgress(s){
+  var el=document.getElementById('sv-progress-list'); if(!el) return;
+  var svProg=allProgress[s.id]||{};
+  var hw=[...(s.homework||[])].sort(function(a,b){return b.date.localeCompare(a.date);}).slice(0,7);
+  if(!hw.length){ el.innerHTML='<div class="empty" style="font-size:.75rem">Chưa có BTVN nào</div>'; return; }
+  el.innerHTML='';
+  hw.forEach(function(h){
+    var total=countHwItemsT(h);
+    var p=svProg[h.date];
+    var done=p?Math.min(p.done,total):0;
+    var pct=total?Math.round(done/total*100):0;
+    var isFull=total>0&&done>=total;
+    var row=document.createElement('div'); row.className='prog-row';
+    row.innerHTML='<div class="prog-date" style="min-width:68px">'+h.date+'</div>'+
+      '<div class="prog-bar-wrap" style="flex:3"><div class="prog-bar"><div class="prog-fill'+(isFull?' full':'')+'" style="width:'+pct+'%"></div></div></div>'+
+      '<div class="prog-pct'+(isFull?' full':'')+'>'+(isFull?'✓':total?pct+'%':'—')+'</div>'+
+      '<div style="font-size:.68rem;color:var(--muted);min-width:50px">'+(total?done+'/'+total:'Không có')+'</div>';
+    el.appendChild(row);
+  });
+}
+
+/* ═══ SCORE REVIEWS ═══ */
+function renderScoreReviews(){
+  var reqs=Object.values(allScoreReqs).sort(function(a,b){return b.submittedAt.localeCompare(a.submittedAt);});
+  var pend=reqs.filter(function(r){return r.status==='pending';});
+  var done=reqs.filter(function(r){return r.status!=='pending';});
+  var pEl=document.getElementById('sr-pend');
+  var dEl=document.getElementById('sr-done');
+  pEl.innerHTML='';
+  if(!pend.length){ pEl.innerHTML='<div class="empty">Không có điểm nào chờ duyệt 🎉</div>'; }
+  else pend.forEach(function(r){ pEl.appendChild(buildScoreCard(r,true)); });
+  dEl.innerHTML='';
+  if(!done.length){ dEl.innerHTML='<div class="empty">Chưa có</div>'; }
+  else done.slice(0,30).forEach(function(r){ dEl.appendChild(buildScoreCard(r,false)); });
+}
+function buildScoreCard(r,showActions){
+  var LSparts=['p1','p2','p3','p4'], RDparts=['p5','p6','p7'];
+  var partLabels={p1:'P1',p2:'P2',p3:'P3',p4:'P4',p5:'P5',p6:'P6',p7:'P7'};
+  var partsHtml='';
+  if(r.parts&&Object.keys(r.parts).length){
+    partsHtml='<div class="sr-parts">';
+    LSparts.forEach(function(k){ if(r.parts[k]!==undefined) partsHtml+='<span class="sr-part-pip ls">'+partLabels[k]+':'+r.parts[k]+'</span>'; });
+    RDparts.forEach(function(k){ if(r.parts[k]!==undefined) partsHtml+='<span class="sr-part-pip rd">'+partLabels[k]+':'+r.parts[k]+'</span>'; });
+    partsHtml+='</div>';
+  }
+  var stCls=r.status==='approved'?'bsa':r.status==='rejected'?'bsd':'bsp';
+  var stLbl=r.status==='approved'?'✅ Đã duyệt':r.status==='rejected'?'❌ Từ chối':'⏳ Chờ';
+  var actHtml=showActions
+    ?'<div class="sr-acts"><button class="btn-ok" onclick="reviewScore(\''+r.id+'\',\'approved\')">✅ Duyệt</button><button class="btn-no" onclick="reviewScore(\''+r.id+'\',\'rejected\')">Từ chối</button></div>'
+    :'<span class="bs '+stCls+'">'+stLbl+'</span>';
+  var div=document.createElement('div'); div.className='sr-card';
+  div.innerHTML='<div class="sr-hd"><div class="sr-score">'+r.score+'</div><div class="sr-info"><div class="sr-name">'+escHtml(r.studentName)+' <span style="opacity:.4;font-size:.7rem">('+r.studentId+')</span></div><div class="sr-meta">📅 '+r.date+(r.testName?' · 📋 '+escHtml(r.testName):'')+' · Nộp lúc '+fmtTimeT(r.submittedAt)+'</div>'+partsHtml+(r.note?'<div class="sr-note">"'+escHtml(r.note)+'"</div>':'')+'</div>'+actHtml+'</div>';
+  return div;
+}
+function reviewScore(id,status){
+  var r=allScoreReqs[id]; if(!r) return;
+  var updates={};
+  updates['scoreRequests/'+id+'/status']=status;
+  updates['scoreRequests/'+id+'/reviewedAt']=new Date().toISOString();
+  if(status==='approved'){
+    var s=allStudents[r.studentId];
+    if(s){
+      var scores=(s.scores||[]).slice();
+      var entry={score:r.score,date:r.date};
+      if(r.parts&&Object.keys(r.parts).length) entry.parts=r.parts;
+      if(r.note) entry.note=r.note;
+      scores.push(entry);
+      scores.sort(function(a,b){return a.date.localeCompare(b.date);});
+      updates['students/'+r.studentId+'/scores']=scores;
+    }
+    toast('✅ Đã duyệt — điểm đã lưu chính thức!');
+  } else { toast('❌ Đã từ chối'); }
+  db.ref().update(updates);
+}
+
+/* ═══ BOOKINGS ═══ */
+function renderBooks(){
+  var books=Object.values(allBookings);
+  var pend=books.filter(function(b){return b.status==='pending';});
+  var done=books.filter(function(b){return b.status!=='pending';}).sort(function(a,b){return b.createdAt.localeCompare(a.createdAt);});
+  var pEl=document.getElementById('bk-pend');
+  var dEl=document.getElementById('bk-done');
+  pEl.innerHTML='';
+  if(!pend.length){ pEl.innerHTML='<div class="empty">Không có yêu cầu nào đang chờ 🎉</div>'; }
+  else pend.forEach(function(b){
+    var div=document.createElement('div'); div.className='bk-card';
+    div.innerHTML='<div class="bk-info"><div class="bk-name">'+b.studentName+' <span style="opacity:.4;font-size:.73rem">('+b.studentId+')</span></div><div class="bk-time">📅 '+b.date+'  ⏰ '+b.time+'</div>'+(b.note?'<div class="bk-note">"'+b.note+'"</div>':'')+'</div><div class="bk-acts"><button class="btn-ok" onclick="reviewBk(\''+b.id+'\',\'approved\')">✅ Duyệt</button><button class="btn-no" onclick="reviewBk(\''+b.id+'\',\'declined\')">Từ chối</button></div>';
+    pEl.appendChild(div);
+  });
+  dEl.innerHTML='';
+  if(!done.length){ dEl.innerHTML='<div class="empty">Chưa có</div>'; }
+  else done.slice(0,20).forEach(function(b){
+    var cls=b.status==='approved'?'bsa':'bsd';
+    var lbl=b.status==='approved'?'✅ Đã duyệt':'❌ Từ chối';
+    var div=document.createElement('div'); div.className='bk-card';
+    div.innerHTML='<div class="bk-info"><div class="bk-name">'+b.studentName+'</div><div class="bk-time">📅 '+b.date+'  ⏰ '+b.time+'</div></div><span class="bs '+cls+'">'+lbl+'</span>';
+    dEl.appendChild(div);
+  });
+}
+function reviewBk(id,status){
+  db.ref('bookings/'+id+'/status').set(status);
+  updateNavBadges();
+  toast(status==='approved'?'✅ Đã xác nhận lịch học!':'❌ Đã từ chối',status==='approved');
+}
+
+/* ═══ SLOTS ═══ */
+function renderSlots(){
+  var td=today();
+  var slots=Object.values(allSlots).filter(function(s){return s.date>=td;}).sort(function(a,b){return a.date.localeCompare(b.date);});
+  var el=document.getElementById('slot-list');
+  if(!slots.length){ el.innerHTML='<div class="empty">Chưa có khung giờ nào. Thêm để học viên book.</div>'; return; }
+  el.innerHTML='';
+  slots.forEach(function(sl){
+    var taken=Object.values(allBookings).some(function(b){return b.slotId===sl.id&&b.status!=='declined';});
+    var div=document.createElement('div'); div.className='slot-li';
+    div.innerHTML='<div class="slot-info"><div class="slot-d">'+fmtD(sl.date)+'</div><div class="slot-t">⏰ '+sl.time+'</div>'+(sl.note?'<div class="slot-n">'+sl.note+'</div>':'')+'</div>'+(taken?'<span class="slot-taken">📌 Đã được book</span>':'<span style="font-size:.7rem;color:var(--muted)">Trống</span>')+'<button class="rm" onclick="rmSlot(\''+sl.id+'\')">✕</button>';
+    el.appendChild(div);
+  });
+}
+function addSlot(){
+  var date=document.getElementById('sl-date').value;
+  var time=document.getElementById('sl-time').value.trim();
+  var note=document.getElementById('sl-note').value.trim();
+  if(!date||!time){ alert('Nhập ngày và giờ!'); return; }
+  var id='s'+Date.now();
+  db.ref('slots/'+id).set({id:id,date:date,time:time,note:note});
+  closeM('m-add-slot');
+  document.getElementById('sl-date').value='';
+  document.getElementById('sl-time').value='';
+  document.getElementById('sl-note').value='';
+  var grid=document.getElementById('sl-time-grid');
+  if(grid) grid.innerHTML='';
+  toast('✅ Đã thêm khung giờ!');
+}
+function rmSlot(id){ db.ref('slots/'+id).remove(); }
+
+/* ═══ SAVE / DEL STUDENT ═══ */
+function saveSv(){
+  if(!CID) return;
+  var s=allStudents[CID]; if(!s) return;
+  var newId=document.getElementById('f-id').value.trim().toUpperCase();
+  var name=document.getElementById('f-name').value.trim();
+  var week=parseInt(document.getElementById('f-week').value)||1;
+  var note=document.getElementById('f-note').value.trim();
+  if(newId!==CID&&allStudents[newId]){ alert('Mã đã tồn tại!'); return; }
+  if(newId!==CID){
+    var updated=Object.assign({},s,{id:newId,name:name,currentWeek:week,note:note});
+    db.ref('students/'+newId).set(updated);
+    db.ref('students/'+CID).remove();
+    CID=newId;
+  } else {
+    db.ref('students/'+CID).update({id:newId,name:name,currentWeek:week,note:note});
+  }
+  document.getElementById('tb-title').textContent=name;
+  document.getElementById('tb-sub').textContent='ID: '+newId;
+  toast('✅ Đã lưu!');
+}
+function delSv(){
+  if(!confirm('Xoá học viên này?')) return;
+  db.ref('students/'+CID).remove();
+  CID=null; showPg('dash',document.getElementById('nv-dash'));
+  toast('🗑️ Đã xoá');
+}
+function cpLink(){
+  var url=document.getElementById('sv-link').textContent;
+  navigator.clipboard.writeText(url).then(function(){toast('📋 Đã copy link!');}).catch(function(){toast('Không copy được',false);});
+}
+
+/* ═══ SCORES ═══ */
+function renderScores(sc){
+  var el=document.getElementById('score-list');
+  var pending=Object.values(allScoreReqs).filter(function(r){return r.studentId===CID&&r.status==='pending';});
+  var allEntries=pending.slice().concat((sc||[]).slice());
+  if(!allEntries.length){ el.innerHTML='<div class="empty">Chưa có điểm</div>'; return; }
+  el.innerHTML='';
+  pending.forEach(function(r){
+    var d=document.createElement('div'); d.className='li'; d.style.borderLeft='3px solid var(--gold)';
+    var partsStr=r.parts&&Object.keys(r.parts).length?Object.entries(r.parts).map(function(e){return e[0].toUpperCase()+':'+e[1];}).join(' '):'';
+    d.innerHTML='<div class="sc-val" style="color:var(--gold)">'+r.score+'</div><div class="li-body"><div class="li-s">'+(r.date||'—')+(partsStr?' · '+partsStr:'')+'</div></div><span class="bs bsp" style="font-size:.6rem;padding:.12rem .4rem">⏳ Chờ</span><button class="btn-ok" style="font-size:.68rem;padding:.25rem .55rem;margin-left:.3rem" onclick="reviewScore(\''+r.id+'\',\'approved\')">✓</button><button class="btn-no" style="font-size:.68rem;padding:.25rem .45rem;" onclick="reviewScore(\''+r.id+'\',\'rejected\')">✕</button>';
+    el.appendChild(d);
+  });
+  var sorted=(sc||[]).slice().sort(function(a,b){return b.date.localeCompare(a.date);});
+  sorted.forEach(function(s,i){
+    var partsStr=s.parts&&Object.keys(s.parts).length?' · '+Object.entries(s.parts).map(function(e){return e[0].toUpperCase()+':'+e[1];}).join(' '):'';
+    var d=document.createElement('div'); d.className='li';
+    if(i===0) d.style.borderLeft='3px solid var(--sage)';
+    d.innerHTML='<div class="sc-val" style="'+(i===0?'color:var(--sage)':'')+'">'+s.score+'</div><div class="li-body"><div class="li-s">'+(s.date||'—')+partsStr+'</div></div><button class="rm" onclick="rmScore('+i+')">✕</button>';
+    el.appendChild(d);
+  });
+}
+function addScore(){
+  var sc=parseInt(document.getElementById('nc-score').value);
+  var dt=document.getElementById('nc-date').value;
+  if(!sc||sc<0||sc>990){ alert('Điểm 0–990!'); return; }
+  var s=allStudents[CID];
+  var scores=(s.scores||[]).slice().concat([{score:sc,date:dt}]).sort(function(a,b){return a.date.localeCompare(b.date);});
+  db.ref('students/'+CID+'/scores').set(scores);
+  closeM('m-score');
+  document.getElementById('nc-score').value='';
+  document.getElementById('nc-date').value='';
+  toast('✅ Thêm điểm!');
+}
+function rmScore(i){
+  var scores=(allStudents[CID].scores||[]).slice();
+  scores.splice(i,1);
+  db.ref('students/'+CID+'/scores').set(scores);
+}
+
+/* ═══ MODULES ═══ */
+function renderMods(mods){
+  var el=document.getElementById('mod-list');
+  if(!mods.length){ el.innerHTML='<div class="empty">Chưa có học phần</div>'; return; }
+  el.innerHTML='';
+  mods.forEach(function(m,i){
+    var d=document.createElement('div'); d.className='li mod-'+m.status;
+    d.innerHTML='<div class="li-body"><div class="li-t">'+m.name+'</div><div class="li-s">Tuần '+(m.week||'?')+(m.weekTitle?' · '+m.weekTitle:'')+' · '+(m.type||'')+'</div></div><select class="mod-sel" onchange="updModSt('+i+',this.value)"><option value="locked" '+(m.status==='locked'?'selected':'')+'>Chưa học</option><option value="current" '+(m.status==='current'?'selected':'')+'>Đang học</option><option value="done" '+(m.status==='done'?'selected':'')+'>Hoàn thành</option></select><button class="rm" onclick="rmMod('+i+')">✕</button>';
+    el.appendChild(d);
+  });
+}
+function updModSt(i,st){
+  var modules=(allStudents[CID].modules||[]).slice();
+  modules[i].status=st;
+  db.ref('students/'+CID+'/modules').set(modules);
+  toast('✅ Cập nhật!');
+}
+function addMod(){
+  var name=document.getElementById('nm-name').value.trim();
+  var week=parseInt(document.getElementById('nm-week').value)||1;
+  var wkt=document.getElementById('nm-wkt').value.trim();
+  var type=document.getElementById('nm-type').value;
+  var st=document.getElementById('nm-st').value;
+  if(!name){ alert('Nhập tên!'); return; }
+  var modules=(allStudents[CID].modules||[]).slice().concat([{name:name,week:week,weekTitle:wkt,type:type,status:st}]);
+  db.ref('students/'+CID+'/modules').set(modules);
+  closeM('m-mod'); toast('✅ Thêm học phần!');
+}
+function rmMod(i){
+  var modules=(allStudents[CID].modules||[]).slice();
+  modules.splice(i,1);
+  db.ref('students/'+CID+'/modules').set(modules);
+}
+
+/* ═══ HOMEWORK ═══ */
+var hwEditId=null;
+var HW_SECTIONS=['vocab','reading','listening','other','practice'];
+var HW_COLORS={vocab:'#C9963A',reading:'#4A9B5E',listening:'#3B82C4',other:'#A07040',practice:'#2457A0'};
+var HW_LABELS={vocab:'📗 Từ vựng',reading:'📘 Đọc',listening:'📙 Nghe',other:'⭐ Khác',practice:'📝 Đề luyện thi'};
+var hwDraft={vocab:[],reading:[],listening:[],other:[],practice:[]};
+
+function addHwItem(sec){ hwDraft[sec].push({text:'',link:'',desc:''}); renderHwModal(); }
+function removeHwItem(sec,i){ hwDraft[sec].splice(i,1); renderHwModal(); }
+
+function renderHwModal(){
+  HW_SECTIONS.forEach(function(sec){
+    var el=document.getElementById('hw-'+sec+'-items'); el.innerHTML='';
+    hwDraft[sec].forEach(function(item,i){
+      var hasDesc=!!(item.desc&&item.desc.trim());
+      var uid='hw-'+sec+'-'+i;
+      var row=document.createElement('div'); row.className='hw-item-row';
+      row.innerHTML=
+        '<div class="hw-item-top">'+
+          '<input type="text" placeholder="Nội dung bài tập..." value="'+escHtml(item.text)+'" oninput="hwDraft[\''+sec+'\']['+i+'].text=this.value">'+
+          '<input type="text" class="link-inp" placeholder="Link (paste vào đây)" value="'+escHtml(item.link)+'" oninput="hwDraft[\''+sec+'\']['+i+'].link=this.value">'+
+          '<button class="hw-desc-toggle'+(hasDesc?' has-desc':'')+'" onclick="toggleDescEditor(\''+uid+'\',\''+sec+'\','+i+')" title="Thêm mô tả / hướng dẫn">'+
+            (hasDesc?'📝 Có mô tả':'+ Mô tả')+
+          '</button>'+
+          '<button class="rm" onclick="removeHwItem(\''+sec+'\','+i+')">✕</button>'+
+        '</div>'+
+        '<div class="hw-desc-wrap'+(hasDesc?' open':'')+'" id="wrap-'+uid+'">'+
+          '<div class="hw-desc-toolbar" id="tb-'+uid+'">'+
+            '<button onmousedown="event.preventDefault();fmtDesc(\'bold\')"><b>B</b></button>'+
+            '<button onmousedown="event.preventDefault();fmtDesc(\'italic\')"><i>I</i></button>'+
+            '<button onmousedown="event.preventDefault();fmtDesc(\'underline\')"><u>U</u></button>'+
+            '<button class="hl-btn" onmousedown="event.preventDefault();fmtHighlight()">🖊 HL</button>'+
+            '<span style="margin-left:auto;font-size:.65rem;color:var(--muted)">Bôi đen → format</span>'+
+          '</div>'+
+          '<div class="hw-desc-editor" id="ed-'+uid+'" contenteditable="true" '+
+            'oninput="hwDraft[\''+sec+'\']['+i+'].desc=this.innerHTML" '+
+            'data-sec="'+sec+'" data-idx="'+i+'">'+
+            (item.desc||'')+
+          '</div>'+
+        '</div>';
+      el.appendChild(row);
+    });
+  });
+}
+
+function toggleDescEditor(uid, sec, i){
+  var wrap=document.getElementById('wrap-'+uid);
+  var btn=wrap?wrap.previousElementSibling.querySelector('.hw-desc-toggle'):null;
+  if(!wrap) return;
+  var isOpen=wrap.classList.contains('open');
+  wrap.classList.toggle('open',!isOpen);
+  if(!isOpen){
+    var ed=document.getElementById('ed-'+uid);
+    if(ed) setTimeout(function(){ed.focus();},50);
+  }
+  // Update button text
+  if(btn){
+    var hasDesc=!!(hwDraft[sec][i].desc&&hwDraft[sec][i].desc.trim());
+    btn.className='hw-desc-toggle'+(hasDesc?' has-desc':'');
+    btn.textContent=hasDesc?'📝 Có mô tả':'+ Mô tả';
+  }
+}
+
+// Active editor tracking
+var _activeDescEd=null;
+document.addEventListener('focusin',function(e){
+  if(e.target&&e.target.classList.contains('hw-desc-editor')) _activeDescEd=e.target;
+});
+
+function fmtDesc(cmd){
+  if(_activeDescEd) _activeDescEd.focus();
+  document.execCommand(cmd,false,null);
+  syncDescFromEditor();
+}
+function fmtHighlight(){
+  if(_activeDescEd) _activeDescEd.focus();
+  // Wrap selection in <mark>
+  var sel=window.getSelection();
+  if(!sel||sel.rangeCount===0||sel.isCollapsed) return;
+  var range=sel.getRangeAt(0);
+  // Check if already highlighted — if so, unwrap
+  var parent=sel.anchorNode.parentElement;
+  if(parent&&parent.tagName==='MARK'){
+    var frag=document.createDocumentFragment();
+    while(parent.firstChild) frag.appendChild(parent.firstChild);
+    parent.parentNode.replaceChild(frag,parent);
+  } else {
+    var mark=document.createElement('mark');
+    try{ range.surroundContents(mark); }
+    catch(e){ document.execCommand('insertHTML',false,'<mark>'+range.toString()+'</mark>'); }
+  }
+  syncDescFromEditor();
+}
+function syncDescFromEditor(){
+  if(!_activeDescEd) return;
+  var sec=_activeDescEd.dataset.sec;
+  var idx=parseInt(_activeDescEd.dataset.idx);
+  if(sec&&!isNaN(idx)) hwDraft[sec][idx].desc=_activeDescEd.innerHTML;
+  // Update toggle button style
+  var uid='hw-'+sec+'-'+idx;
+  var wrap=document.getElementById('wrap-'+uid);
+  if(wrap){
+    var btn=wrap.previousElementSibling.querySelector('.hw-desc-toggle');
+    var hasDesc=!!(_activeDescEd.innerHTML&&_activeDescEd.innerHTML.trim());
+    if(btn){ btn.className='hw-desc-toggle'+(hasDesc?' has-desc':''); btn.textContent=hasDesc?'📝 Có mô tả':'+ Mô tả'; }
+  }
+}
+function openHwModal(editId){
+  hwEditId=editId||null;
+  hwDraft={vocab:[],reading:[],listening:[],other:[],practice:[]};
+  if(editId){
+    var s=allStudents[CID];
+    var hw=(s.homework||[]).find(function(h){return h.id===editId;});
+    if(hw){
+      document.getElementById('hw-date').value=hw.date||'';
+      document.getElementById('hw-date-to').value=hw.dateTo||'';
+      document.getElementById('hw-label').value=hw.label||'';
+      HW_SECTIONS.forEach(function(sec){ hwDraft[sec]=(hw[sec]||[]).map(function(x){return Object.assign({},x);}); });
+    }
+    document.getElementById('m-hw-title').textContent='✏️ Sửa BTVN';
+  } else {
+    document.getElementById('hw-date').value='';
+    document.getElementById('hw-date-to').value='';
+    document.getElementById('hw-label').value='';
+    document.getElementById('m-hw-title').textContent='📋 Thêm BTVN';
+  }
+  renderHwModal(); openM('m-hw');
+}
+function closeHwModal(){ hwDraft={vocab:[],reading:[],listening:[],other:[],practice:[]}; closeM('m-hw'); }
+function saveHw(){
+  var date=document.getElementById('hw-date').value;
+  var dateTo=document.getElementById('hw-date-to').value;
+  var label=document.getElementById('hw-label').value.trim();
+  if(!date){ alert('Chọn ngày bắt đầu!'); return; }
+  if(dateTo && dateTo <= date){ alert('Ngày kết thúc phải sau ngày bắt đầu!'); return; }
+  var s=allStudents[CID];
+  var homework=(s.homework||[]).slice();
+  var entry={
+    id:hwEditId||('hw'+Date.now()),date:date,dateTo:dateTo||'',label:label,
+    vocab:hwDraft.vocab.filter(function(x){return x.text||x.link;}).map(function(x){return {text:x.text,link:x.link,desc:x.desc||''}}),
+    reading:hwDraft.reading.filter(function(x){return x.text||x.link;}).map(function(x){return {text:x.text,link:x.link,desc:x.desc||''}}),
+    listening:hwDraft.listening.filter(function(x){return x.text||x.link;}).map(function(x){return {text:x.text,link:x.link,desc:x.desc||''}}),
+    other:hwDraft.other.filter(function(x){return x.text||x.link;}).map(function(x){return {text:x.text,link:x.link,desc:x.desc||''}}),
+    practice:hwDraft.practice.filter(function(x){return x.text||x.link;}).map(function(x){return {text:x.text,link:x.link,desc:x.desc||''}})
+  };
+  if(hwEditId){
+    var idx=homework.findIndex(function(h){return h.id===hwEditId;});
+    if(idx!==-1) homework[idx]=entry; else homework.push(entry);
+  } else { homework.push(entry); }
+  homework.sort(function(a,b){return a.date.localeCompare(b.date);});
+  db.ref('students/'+CID+'/homework').set(homework);
+  closeHwModal(); toast('✅ Đã lưu BTVN!');
+}
+function renderHw(hw){
+  var el=document.getElementById('hw-list');
+  if(!hw||!hw.length){ el.innerHTML='<div class="empty">Chưa có BTVN nào</div>'; return; }
+  el.innerHTML='';
+  var svSubs=(allSubs[CID])||{};
+  hw.slice().sort(function(a,b){return b.date.localeCompare(a.date);}).forEach(function(h){
+    var subCount=0;
+    HW_SECTIONS.forEach(function(sec){ (h[sec]||[]).forEach(function(_,i){ if(svSubs[h.id+'_'+sec+'_'+i]) subCount++; }); });
+    var totalItems=0;
+    HW_SECTIONS.forEach(function(sec){ totalItems+=(h[sec]||[]).length; });
+    var sheet=document.createElement('div'); sheet.className='hw-sheet';
+    // Daily link from student
+    var svDayLink=(allDayLinks[CID]&&allDayLinks[CID][h.id])||null;
+    var dayLinkHtml='<div class="hw-daylink '+(svDayLink?'has-link':'no-link')+'">'
+      +'<span class="hw-daylink-lbl">🔗 Link tổng hợp:</span>';
+    if(svDayLink){
+      dayLinkHtml+='<a class="hw-daylink-url" href="'+escHtml(svDayLink.link)+'" target="_blank">'+escHtml(svDayLink.link)+'</a>'
+        +'<span class="hw-daylink-time">'+fmtTimeT(svDayLink.submittedAt)+'</span>';
+    } else {
+      dayLinkHtml+='<span style="font-size:.74rem;color:var(--muted);font-style:italic">Chưa nộp</span>';
+    }
+    dayLinkHtml+='</div>';
+    var secsHtml='';
+    HW_SECTIONS.forEach(function(sec){
+      var items=h[sec]||[]; if(!items.length) return;
+      secsHtml+='<div class="hw-sec"><div class="hw-sec-title" style="color:'+HW_COLORS[sec]+'">'+HW_LABELS[sec]+'</div>';
+      items.forEach(function(item,i){
+        var linkLabel=sec==='practice'?'🔗 Xem đề':'🔗 Bài tập';
+        var teacherLink=item.link?'<a class="hw-link-a" href="'+escHtml(item.link)+'" target="_blank">'+linkLabel+'</a>':'';
+        var sub=svSubs[h.id+'_'+sec+'_'+i];
+        var subHtml=sub
+          ?'<a class="hw-sub-link" href="'+escHtml(sub.link)+'" target="_blank">📤 Bài nộp</a><span class="hw-sub-time">'+fmtTimeT(sub.submittedAt)+'</span>'
+          :'<span class="hw-sub-empty">Chưa nộp</span>';
+        var descHtml=item.desc?'<div class="hw-item-desc">'+item.desc+'</div>':'';
+        secsHtml+='<div class="hw-link-li" style="flex-direction:column;align-items:flex-start;gap:.2rem;"><div style="display:flex;align-items:center;gap:.45rem;width:100%"><span class="hw-link-text">'+escHtml(item.text||'—')+'</span><div class="hw-link-actions">'+teacherLink+subHtml+'</div></div>'+descHtml+'</div>';
+      });
+      secsHtml+='</div>';
+    });
+    var progressPct=totalItems?Math.round(subCount/totalItems*100):0;
+    var progColor=progressPct===100?'var(--sage)':progressPct>0?'var(--gold)':'var(--muted)';
+    var dateDisplay = h.dateTo ? h.date+' → '+h.dateTo : h.date;
+    var deadlineBadge = h.dateTo ? '<span style="font-size:.63rem;font-weight:600;background:rgba(192,52,26,.1);color:var(--rust);border:1px solid rgba(192,52,26,.2);padding:.12rem .48rem;margin-left:.5rem;">🗓 Hạn nộp: '+fmtDate(h.dateTo)+'</span>' : '';
+    sheet.innerHTML='<div class="hw-sheet-hd"><div><div class="hw-sheet-date">'+dateDisplay+deadlineBadge+'</div>'+(h.label?'<div class="hw-sheet-label">'+escHtml(h.label)+'</div>':'')+'</div><div style="display:flex;align-items:center;gap:.6rem">'+(secsHtml?'<div style="font-size:.7rem;color:'+progColor+';">'+progressPct+'%</div>':'')+'<span style="font-size:.7rem;font-weight:600;color:'+progColor+'">'+(progressPct===100?'✓ Hoàn thành':subCount+'/'+totalItems+' đã nộp')+'</span><button class="btn bg" style="font-size:.72rem;padding:.3rem .65rem;" onclick="openHwModal(\''+h.id+'\')">✏️</button><button class="rm" onclick="rmHw(\''+h.id+'\')">✕</button></div></div>'+dayLinkHtml+(secsHtml||'<div style="font-size:.75rem;color:var(--muted)">Chưa có nội dung</div>');
+    el.appendChild(sheet);
+  });
+}
+function rmHw(id){
+  var s=allStudents[CID];
+  var homework=(s.homework||[]).filter(function(h){return h.id!==id;});
+  db.ref('students/'+CID+'/homework').set(homework);
+}
+
+/* ═══ SCHEDULE ═══ */
+function renderSched(sched){
+  var el=document.getElementById('sched-list');
+  if(!sched.length){ el.innerHTML='<div class="empty">Chưa có lịch</div>'; return; }
+  el.innerHTML='';
+  var td=today();
+  sched.slice().sort(function(a,b){return a.date.localeCompare(b.date);}).forEach(function(sc){
+    var past=sc.date<td;
+    var i=sched.indexOf(sc);
+    var d=document.createElement('div'); d.className='li'; d.style.opacity=past?'.45':'1';
+    d.innerHTML='<div class="li-body"><div class="li-t">'+sc.title+'</div><div class="li-s">'+sc.date+(sc.time?' · '+sc.time:'')+'</div></div><button class="rm" onclick="rmSched('+i+')">✕</button>';
+    el.appendChild(d);
+  });
+}
+function addSched(){
+  var title=document.getElementById('nsc-title').value.trim();
+  var date=document.getElementById('nsc-date').value;
+  var time=document.getElementById('nsc-time').value.trim();
+  if(!title||!date){ alert('Nhập đủ!'); return; }
+  var schedule=(allStudents[CID].schedule||[]).slice().concat([{title:title,date:date,time:time}]);
+  db.ref('students/'+CID+'/schedule').set(schedule);
+  closeM('m-sched'); toast('✅ Thêm lịch!');
+}
+function rmSched(i){
+  var schedule=(allStudents[CID].schedule||[]).slice();
+  schedule.splice(i,1);
+  db.ref('students/'+CID+'/schedule').set(schedule);
+}
+
+/* ═══ ADD STUDENT ═══ */
+function addSv(){
+  var name=document.getElementById('ns-name').value.trim();
+  var id=document.getElementById('ns-id').value.trim().toUpperCase();
+  if(!name||!id){ alert('Nhập đủ!'); return; }
+  if(allStudents[id]){ alert('Mã đã tồn tại!'); return; }
+  db.ref('students/'+id).set({id:id,name:name,currentWeek:1,scores:[],modules:[],homework:[],schedule:[],note:''});
+  closeM('m-add-sv');
+  document.getElementById('ns-name').value='';
+  document.getElementById('ns-id').value='';
+  toast('✅ Đã thêm học viên! Nhấn vào tên để mở.');
+}
+
+/* ═══ CLASS MANAGEMENT ═══ */
+var allClasses = {};
+var CLS_ID = null; // currently selected class
+var clsHwDraft = {vocab:[],reading:[],listening:[],other:[],practice:[]};
+var clsHwEditId = null;
+
+db.ref('classes').on('value', function(snap){
+  allClasses = snap.val() || {};
+  if(document.getElementById('pg-classes').classList.contains('on')) renderClsPage();
+});
+
+function renderClsPage(){
+  renderClsGrid();
+  if(CLS_ID && allClasses[CLS_ID]) renderClsDetail(CLS_ID);
+}
+
+function renderClsGrid(){
+  var el = document.getElementById('cls-grid');
+  var classes = Object.values(allClasses);
+  if(!classes.length){
+    el.innerHTML = '<div class="empty" style="grid-column:1/-1">Chưa có lớp nào. Nhấn <b>+ Tạo lớp mới</b> để bắt đầu.</div>';
+    return;
+  }
+  el.innerHTML = '';
+  classes.forEach(function(cls){
+    var memberCount = (cls.members||[]).length;
+    var hwCount = (cls.homework||[]).length;
+    var card = document.createElement('div');
+    card.className = 'cls-card' + (cls.id === CLS_ID ? ' active' : '');
+    card.innerHTML =
+      '<button class="cls-rm-btn" onclick="event.stopPropagation();rmClass(\''+cls.id+'\')">✕</button>'+
+      '<div class="cls-card-name">'+escHtml(cls.name)+'</div>'+
+      '<div class="cls-card-desc">'+escHtml(cls.desc||'')+'</div>'+
+      '<div class="cls-card-meta">'+
+        '<span class="cls-badge">👥 '+memberCount+' học viên</span>'+
+        '<span class="cls-badge">📋 '+hwCount+' BTVN</span>'+
+      '</div>';
+    card.onclick = function(){ openClsDetail(cls.id); };
+    el.appendChild(card);
+  });
+}
+
+function addClass(){
+  var name = document.getElementById('nc-cls-name').value.trim();
+  var desc = document.getElementById('nc-cls-desc').value.trim();
+  if(!name){ alert('Nhập tên lớp!'); return; }
+  var id = 'cls' + Date.now();
+  db.ref('classes/'+id).set({id:id, name:name, desc:desc, members:[], homework:[]});
+  closeM('m-add-cls');
+  document.getElementById('nc-cls-name').value = '';
+  document.getElementById('nc-cls-desc').value = '';
+  toast('✅ Đã tạo lớp: '+name);
+}
+
+function rmClass(id){
+  if(!confirm('Xoá lớp này? Bài tập đã giao cho học viên sẽ không bị xoá.')) return;
+  if(CLS_ID === id){ CLS_ID = null; exitClsDetail(); }
+  db.ref('classes/'+id).remove();
+  toast('🗑️ Đã xoá lớp');
+}
+
+function openClsDetail(id){
+  CLS_ID = id;
+  document.getElementById('cls-overview').style.display = 'none';
+  document.getElementById('cls-detail-wrap').style.display = 'block';
+  renderClsDetail(id);
+}
+
+function exitClsDetail(){
+  CLS_ID = null;
+  document.getElementById('cls-overview').style.display = 'block';
+  document.getElementById('cls-detail-wrap').style.display = 'none';
+  renderClsGrid();
+}
+
+function renderClsDetail(id){
+  var cls = allClasses[id]; if(!cls) return;
+  document.getElementById('cls-d-name').textContent = cls.name;
+  document.getElementById('cls-d-desc').textContent = cls.desc || '';
+  // Members
+  var mEl = document.getElementById('cls-d-members');
+  var members = cls.members || [];
+  if(!members.length){
+    mEl.innerHTML = '<div class="cls-sv-empty">Chưa có học viên nào trong lớp.</div>';
+  } else {
+    mEl.innerHTML = '';
+    members.forEach(function(svId){
+      var sv = allStudents[svId];
+      var tag = document.createElement('div'); tag.className = 'cls-sv-tag';
+      tag.innerHTML = '<span>'+(sv?escHtml(sv.name):svId)+'</span><button onclick="rmSvFromClass(\''+svId+'\')">✕</button>';
+      mEl.appendChild(tag);
+    });
+  }
+  // Add-student select
+  var sel = document.getElementById('cls-add-sv-sel');
+  sel.innerHTML = '<option value="">— Thêm học viên vào lớp —</option>';
+  Object.values(allStudents).forEach(function(sv){
+    if(members.indexOf(sv.id) === -1){
+      var opt = document.createElement('option'); opt.value = sv.id;
+      opt.textContent = sv.name + ' (' + sv.id + ')';
+      sel.appendChild(opt);
+    }
+  });
+  // HW list
+  renderClsHwList(cls);
+}
+
+function addSvToClass(){
+  var sel = document.getElementById('cls-add-sv-sel');
+  var svId = sel.value; if(!svId){ alert('Chọn học viên!'); return; }
+  var cls = allClasses[CLS_ID]; if(!cls) return;
+  var members = (cls.members||[]).slice();
+  if(members.indexOf(svId) !== -1){ alert('Học viên đã trong lớp!'); return; }
+  members.push(svId);
+  db.ref('classes/'+CLS_ID+'/members').set(members);
+  toast('✅ Đã thêm vào lớp!');
+}
+
+function rmSvFromClass(svId){
+  var cls = allClasses[CLS_ID]; if(!cls) return;
+  var members = (cls.members||[]).filter(function(m){ return m !== svId; });
+  db.ref('classes/'+CLS_ID+'/members').set(members);
+  toast('Đã xoá khỏi lớp');
+}
+
+function saveEditClass(){
+  var name = document.getElementById('ec-cls-name').value.trim();
+  var desc = document.getElementById('ec-cls-desc').value.trim();
+  if(!name){ alert('Nhập tên lớp!'); return; }
+  db.ref('classes/'+CLS_ID).update({name:name, desc:desc});
+  closeM('m-edit-cls');
+  toast('✅ Đã cập nhật lớp!');
+}
+
+// Pre-fill edit modal
+document.addEventListener('click', function(e){
+  if(e.target && e.target.id === 'nv-classes') return;
+});
+function openEditClsModal(){
+  var cls = allClasses[CLS_ID]; if(!cls) return;
+  document.getElementById('ec-cls-name').value = cls.name||'';
+  document.getElementById('ec-cls-desc').value = cls.desc||'';
+  openM('m-edit-cls');
+}
+
+/* ─── CLASS HW ─── */
+function openClsHwModal(editId){
+  clsHwEditId = editId||null;
+  clsHwDraft = {vocab:[],reading:[],listening:[],other:[],practice:[]};
+  var cls = allClasses[CLS_ID];
+  document.getElementById('m-cls-hw-title').textContent = editId ? '✏️ Sửa BTVN lớp' : '📋 Giao BTVN cho lớp: '+(cls?cls.name:'');
+  if(editId){
+    var hw = (cls.homework||[]).find(function(h){return h.id===editId;});
+    if(hw){
+      document.getElementById('cls-hw-date').value = hw.date||'';
+      document.getElementById('cls-hw-date-to').value = hw.dateTo||'';
+      document.getElementById('cls-hw-label').value = hw.label||'';
+      HW_SECTIONS.forEach(function(sec){ clsHwDraft[sec] = (hw[sec]||[]).map(function(x){return {text:x.text||'',link:x.link||'',desc:x.desc||''};});});
+    }
+  } else {
+    document.getElementById('cls-hw-date').value = today();
+    document.getElementById('cls-hw-date-to').value = '';
+    document.getElementById('cls-hw-label').value = '';
+  }
+  renderClsHwModal();
+  openM('m-cls-hw');
+}
+
+function renderClsHwModal(){
+  HW_SECTIONS.forEach(function(sec){
+    var el = document.getElementById('cls-hw-'+sec+'-items');
+    if(!el) return;
+    el.innerHTML = '';
+    (clsHwDraft[sec]||[]).forEach(function(_,i){ el.appendChild(buildClsHwItemRow(sec,i)); });
+  });
+}
+
+function buildClsHwItemRow(sec, i){
+  var item = clsHwDraft[sec][i];
+  var row = document.createElement('div'); row.className = 'hw-item-row';
+  var hasDesc = !!(item.desc && item.desc.trim());
+  var uid = 'cls-hw-'+sec+'-'+i;
+  row.innerHTML =
+    '<div class="hw-item-top">'+
+      '<input type="text" placeholder="Nội dung bài tập..." value="'+escHtml(item.text||'')+'" oninput="clsHwDraft[\''+sec+'\']['+i+'].text=this.value">'+
+      '<input type="text" class="link-inp" placeholder="Link (paste vào đây)" value="'+escHtml(item.link||'')+'" oninput="clsHwDraft[\''+sec+'\']['+i+'].link=this.value">'+
+      '<button class="hw-desc-toggle'+(hasDesc?' has-desc':'')+'" onclick="toggleClsDescEditor(\''+uid+'\',\''+sec+'\','+i+')" title="Thêm mô tả / hướng dẫn">'+
+        (hasDesc?'📝 Có mô tả':'+ Mô tả')+
+      '</button>'+
+      '<button class="rm" onclick="rmClsHwItem(\''+sec+'\','+i+')">✕</button>'+
+    '</div>'+
+    '<div class="hw-desc-wrap'+(hasDesc?' open':'')+'" id="wrap-'+uid+'">'+
+      '<div class="hw-desc-toolbar" id="tb-'+uid+'">'+
+        '<button onmousedown="event.preventDefault();fmtClsDesc(\'bold\')"><b>B</b></button>'+
+        '<button onmousedown="event.preventDefault();fmtClsDesc(\'italic\')"><i>I</i></button>'+
+        '<button onmousedown="event.preventDefault();fmtClsDesc(\'underline\')"><u>U</u></button>'+
+        '<button class="hl-btn" onmousedown="event.preventDefault();fmtClsHighlight()">🖊 HL</button>'+
+        '<span style="margin-left:auto;font-size:.65rem;color:var(--muted)">Bôi đen → format</span>'+
+      '</div>'+
+      '<div class="hw-desc-editor" id="ed-'+uid+'" contenteditable="true" '+
+        'oninput="clsHwDraft[\''+sec+'\']['+i+'].desc=this.innerHTML" '+
+        'data-sec="'+sec+'" data-idx="'+i+'">'+
+        (item.desc||'')+
+      '</div>'+
+    '</div>';
+  return row;
+}
+
+function toggleClsDescEditor(uid, sec, i){
+  var wrap = document.getElementById('wrap-'+uid);
+  var btn = wrap ? wrap.previousElementSibling.querySelector('.hw-desc-toggle') : null;
+  if(!wrap) return;
+  var isOpen = wrap.classList.contains('open');
+  wrap.classList.toggle('open', !isOpen);
+  if(!isOpen){
+    var ed = document.getElementById('ed-'+uid);
+    if(ed) setTimeout(function(){ ed.focus(); }, 50);
+  }
+  if(btn){
+    var hasDesc = !!(clsHwDraft[sec][i].desc && clsHwDraft[sec][i].desc.trim());
+    btn.className = 'hw-desc-toggle'+(hasDesc?' has-desc':'');
+    btn.textContent = hasDesc ? '📝 Có mô tả' : '+ Mô tả';
+  }
+}
+
+var _activeClsDescEd = null;
+document.addEventListener('focusin', function(e){
+  if(e.target && e.target.classList.contains('hw-desc-editor') && e.target.id && e.target.id.startsWith('ed-cls-hw-'))
+    _activeClsDescEd = e.target;
+});
+
+function fmtClsDesc(cmd){
+  if(_activeClsDescEd) _activeClsDescEd.focus();
+  document.execCommand(cmd, false, null);
+  syncClsDescFromEditor();
+}
+function fmtClsHighlight(){
+  if(_activeClsDescEd) _activeClsDescEd.focus();
+  var sel = window.getSelection();
+  if(!sel || sel.rangeCount===0 || sel.isCollapsed) return;
+  var range = sel.getRangeAt(0);
+  var parent = sel.anchorNode.parentElement;
+  if(parent && parent.tagName==='MARK'){
+    var frag = document.createDocumentFragment();
+    while(parent.firstChild) frag.appendChild(parent.firstChild);
+    parent.parentNode.replaceChild(frag, parent);
+  } else {
+    var mark = document.createElement('mark');
+    try{ range.surroundContents(mark); }
+    catch(e){ document.execCommand('insertHTML', false, '<mark>'+range.toString()+'</mark>'); }
+  }
+  syncClsDescFromEditor();
+}
+function syncClsDescFromEditor(){
+  if(!_activeClsDescEd) return;
+  var sec = _activeClsDescEd.dataset.sec;
+  var idx = parseInt(_activeClsDescEd.dataset.idx);
+  if(sec && !isNaN(idx)) clsHwDraft[sec][idx].desc = _activeClsDescEd.innerHTML;
+  var uid = 'cls-hw-'+sec+'-'+idx;
+  var wrap = document.getElementById('wrap-'+uid);
+  if(wrap){
+    var btn = wrap.previousElementSibling.querySelector('.hw-desc-toggle');
+    var hasDesc = !!(_activeClsDescEd.innerHTML && _activeClsDescEd.innerHTML.trim());
+    if(btn){ btn.className='hw-desc-toggle'+(hasDesc?' has-desc':''); btn.textContent=hasDesc?'📝 Có mô tả':'+ Mô tả'; }
+  }
+}
+
+function addClsHwItem(sec){
+  clsHwDraft[sec].push({text:'',link:'',desc:''});
+  renderClsHwModal();
+}
+
+function rmClsHwItem(sec, i){
+  clsHwDraft[sec].splice(i,1);
+  renderClsHwModal();
+}
+
+function closeClsHwModal(){ clsHwDraft={vocab:[],reading:[],listening:[],other:[],practice:[]}; closeM('m-cls-hw'); }
+
+function saveClsHw(){
+  var date = document.getElementById('cls-hw-date').value;
+  var dateTo = document.getElementById('cls-hw-date-to').value;
+  var label = document.getElementById('cls-hw-label').value.trim();
+  if(!date){ alert('Chọn ngày bắt đầu!'); return; }
+  if(dateTo && dateTo <= date){ alert('Ngày kết thúc phải sau ngày bắt đầu!'); return; }
+  var cls = allClasses[CLS_ID]; if(!cls) return;
+  var members = cls.members||[];
+  if(!members.length){ alert('Lớp chưa có học viên nào!'); return; }
+
+  var hwEntry = {
+    id: clsHwEditId||('hw'+Date.now()),
+    date: date, dateTo: dateTo||'', label: label,
+    classId: CLS_ID
+  };
+  HW_SECTIONS.forEach(function(sec){
+    hwEntry[sec] = clsHwDraft[sec].filter(function(x){return x.text||x.link;}).map(function(x){return {text:x.text,link:x.link,desc:x.desc||''};});
+  });
+
+  // Save to class record
+  var clsHomework = (cls.homework||[]).slice();
+  if(clsHwEditId){
+    var idx = clsHomework.findIndex(function(h){return h.id===clsHwEditId;});
+    if(idx !== -1) clsHomework[idx] = hwEntry; else clsHomework.push(hwEntry);
+  } else { clsHomework.push(hwEntry); }
+  clsHomework.sort(function(a,b){return a.date.localeCompare(b.date);});
+
+  // Propagate to each student in the class
+  var updates = {};
+  updates['classes/'+CLS_ID+'/homework'] = clsHomework;
+  members.forEach(function(svId){
+    var sv = allStudents[svId]; if(!sv) return;
+    var svHw = (sv.homework||[]).slice();
+    if(clsHwEditId){
+      var si = svHw.findIndex(function(h){return h.id===clsHwEditId;});
+      if(si !== -1) svHw[si] = hwEntry; else svHw.push(hwEntry);
+    } else {
+      // Don't duplicate if same id already exists
+      if(!svHw.find(function(h){return h.id===hwEntry.id;})) svHw.push(hwEntry);
+    }
+    svHw.sort(function(a,b){return a.date.localeCompare(b.date);});
+    updates['students/'+svId+'/homework'] = svHw;
+  });
+  db.ref().update(updates);
+  closeClsHwModal();
+  toast('✅ Đã giao BTVN cho '+members.length+' học viên!');
+}
+
+function rmClsHw(hwId){
+  if(!confirm('Xoá BTVN này? Bài tập sẽ bị xoá khỏi tất cả học viên trong lớp.')) return;
+  var cls = allClasses[CLS_ID]; if(!cls) return;
+  var members = cls.members||[];
+  var clsHomework = (cls.homework||[]).filter(function(h){return h.id!==hwId;});
+  var updates = {};
+  updates['classes/'+CLS_ID+'/homework'] = clsHomework;
+  members.forEach(function(svId){
+    var sv = allStudents[svId]; if(!sv) return;
+    var svHw = (sv.homework||[]).filter(function(h){return h.id!==hwId;});
+    updates['students/'+svId+'/homework'] = svHw;
+  });
+  db.ref().update(updates);
+  toast('🗑️ Đã xoá BTVN khỏi lớp');
+}
+
+function renderClsHwList(cls){
+  var el = document.getElementById('cls-hw-list');
+  var hw = cls.homework||[];
+  if(!hw.length){ el.innerHTML = '<div class="empty">Chưa giao BTVN nào cho lớp này.</div>'; return; }
+  el.innerHTML = '';
+  var members = cls.members||[];
+  hw.slice().sort(function(a,b){return b.date.localeCompare(a.date);}).forEach(function(h){
+    var sheet = document.createElement('div'); sheet.className = 'cls-hw-sheet';
+    // Submission overview per student
+    var svRows = '';
+    var doneCount = 0;
+    members.forEach(function(svId){
+      var sv = allStudents[svId];
+      var name = sv ? escHtml(sv.name) : svId;
+      // check if student submitted day link
+      var hasLink = allDayLinks[svId] && allDayLinks[svId][h.id];
+      // count individual submissions
+      var svSubs = allSubs[svId]||{};
+      var subItems = 0, totalItems = 0;
+      HW_SECTIONS.forEach(function(sec){
+        (h[sec]||[]).forEach(function(_,i){
+          totalItems++;
+          if(svSubs[h.id+'_'+sec+'_'+i]) subItems++;
+        });
+      });
+      var isDone = !!(hasLink);
+      if(isDone) doneCount++;
+      var statusHtml = isDone
+        ? '<span class="cls-hw-sv-status done">✓ Đã nộp link</span>'
+        : (subItems > 0
+          ? '<span class="cls-hw-sv-status" style="color:var(--gold)">'+subItems+'/'+totalItems+' mục</span>'
+          : '<span class="cls-hw-sv-status pending">Chưa nộp</span>');
+      svRows += '<div class="cls-hw-sv-row"><span class="cls-hw-sv-name">'+name+'</span>'+statusHtml+'</div>';
+    });
+    var pct = members.length ? Math.round(doneCount/members.length*100) : 0;
+    var progColor = pct===100?'var(--sage)':pct>0?'var(--gold)':'var(--muted)';
+    sheet.innerHTML =
+      '<div class="cls-hw-hd">'+
+        '<div><div class="cls-hw-date">'+( h.dateTo ? h.date+' → '+h.dateTo : h.date )+'</div>'+(h.dateTo?'<span style="font-size:.63rem;font-weight:600;background:rgba(192,52,26,.1);color:var(--rust);border:1px solid rgba(192,52,26,.2);padding:.1rem .42rem;">🗓 Hạn nộp: '+fmtDate(h.dateTo)+'</span>':'')+(h.label?'<div class="cls-hw-label">'+escHtml(h.label)+'</div>':'')+'</div>'+
+        '<div style="display:flex;align-items:center;gap:.6rem;">'+
+          '<span style="font-size:.72rem;color:'+progColor+';">'+doneCount+'/'+members.length+' nộp</span>'+
+          '<button class="btn bg" style="font-size:.7rem;padding:.28rem .6rem;" onclick="openClsHwModal(\''+h.id+'\')">✏️</button>'+
+          '<button class="rm" onclick="rmClsHw(\''+h.id+'\')">✕</button>'+
+        '</div>'+
+      '</div>'+
+      '<div class="cls-hw-prog-bar"><div class="cls-hw-prog-fill" style="width:'+pct+'%;'+(pct===100?'background:var(--sage)':'')+'"></div></div>'+
+      (members.length ? '<div class="cls-hw-sv-list">'+svRows+'</div>' : '<div style="font-size:.73rem;color:var(--muted)">Lớp chưa có học viên</div>');
+    el.appendChild(sheet);
+  });
+}
+
+/* ═══ INIT ═══ */
+window.addEventListener('load', function(){
+  renderDash();
+});
+</script>
+</body>
+</html>
