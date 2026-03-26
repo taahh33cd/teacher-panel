@@ -667,12 +667,24 @@ var allGoals     = {};
 var allDayLinks  = {};
 
 /* ═══ HELPERS ═══ */
-function today(){ return new Date().toISOString().split('T')[0]; }
-function fmtD(s){ return new Date(s+'T00:00:00').toLocaleDateString('vi-VN',{weekday:'short',day:'numeric',month:'numeric'}); }
+function today(){
+  var d=new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function fmtD(s){
+  if(!s) return '—';
+  var p=s.split('-');
+  return p[2]+'/'+p[1]+'/'+p[0];
+}
+function isoToDMY(s){ if(!s)return '—'; var p=s.split('-'); return p[2]+'/'+p[1]+'/'+p[0]; }
 function fmtTimeT(iso){
   if(!iso) return '';
   var d=new Date(iso);
-  return d.toLocaleDateString('vi-VN',{day:'numeric',month:'numeric'})+' '+d.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'});
+  var dd=String(d.getDate()).padStart(2,'0');
+  var mm=String(d.getMonth()+1).padStart(2,'0');
+  var hh=String(d.getHours()).padStart(2,'0');
+  var mi=String(d.getMinutes()).padStart(2,'0');
+  return dd+'/'+mm+' '+hh+':'+mi;
 }
 function escHtml(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
 function toast(m,ok){
@@ -848,7 +860,8 @@ function renderDash(){
   var students=Object.values(allStudents);
   var books=Object.values(allBookings);
   var td=today();
-  var yesterday=new Date(Date.now()-86400000).toISOString().split('T')[0];
+  var _yd=new Date(); _yd.setDate(_yd.getDate()-1);
+  var yesterday=_yd.getFullYear()+'-'+String(_yd.getMonth()+1).padStart(2,'0')+'-'+String(_yd.getDate()).padStart(2,'0');
   var fullyDone=0;
   students.forEach(function(s){
     var todayHw=(s.homework||[]).find(function(h){return h.date===td;});
@@ -878,7 +891,7 @@ function renderDash(){
     if(goal&&goal.target){
       var gap=latestScore!==null?goal.target-latestScore:null;
       var gapTxt=gap!==null?(gap>0?'còn '+gap+'đ':'✓ Đạt!'):'chưa có điểm';
-      var dlTxt=goal.deadline?new Date(goal.deadline+'-01').toLocaleDateString('vi-VN',{month:'short',year:'numeric'}):'';
+      var dlTxt=''; if(goal.deadline){var _gpt=goal.deadline.split('-'); dlTxt='T'+_gpt[1]+'/'+_gpt[0];}
       var gapColor=gap!==null&&gap<=0?'var(--sage)':'var(--gold)';
       goalHtml='<div style="display:flex;align-items:center;gap:.4rem;flex-shrink:0;">'
         +'<span style="font-size:.62rem;color:var(--muted)">Mục tiêu:</span>'
@@ -937,7 +950,7 @@ function renderSvProgress(s){
     var pct=total?Math.round(done/total*100):0;
     var isFull=total>0&&done>=total;
     var row=document.createElement('div'); row.className='prog-row';
-    row.innerHTML='<div class="prog-date" style="min-width:68px">'+h.date+'</div>'+
+    row.innerHTML='<div class="prog-date" style="min-width:68px">'+isoToDMY(h.date)+'</div>'+
       '<div class="prog-bar-wrap" style="flex:3"><div class="prog-bar"><div class="prog-fill'+(isFull?' full':'')+'" style="width:'+pct+'%"></div></div></div>'+
       '<div class="prog-pct'+(isFull?' full':'')+'>'+(isFull?'✓':total?pct+'%':'—')+'</div>'+
       '<div style="font-size:.68rem;color:var(--muted);min-width:50px">'+(total?done+'/'+total:'Không có')+'</div>';
@@ -975,7 +988,7 @@ function buildScoreCard(r,showActions){
     ?'<div class="sr-acts"><button class="btn-ok" onclick="reviewScore(\''+r.id+'\',\'approved\')">✅ Duyệt</button><button class="btn-no" onclick="reviewScore(\''+r.id+'\',\'rejected\')">Từ chối</button></div>'
     :'<span class="bs '+stCls+'">'+stLbl+'</span>';
   var div=document.createElement('div'); div.className='sr-card';
-  div.innerHTML='<div class="sr-hd"><div class="sr-score">'+r.score+'</div><div class="sr-info"><div class="sr-name">'+escHtml(r.studentName)+' <span style="opacity:.4;font-size:.7rem">('+r.studentId+')</span></div><div class="sr-meta">📅 '+r.date+(r.testName?' · 📋 '+escHtml(r.testName):'')+' · Nộp lúc '+fmtTimeT(r.submittedAt)+'</div>'+partsHtml+(r.note?'<div class="sr-note">"'+escHtml(r.note)+'"</div>':'')+'</div>'+actHtml+'</div>';
+  div.innerHTML='<div class="sr-hd"><div class="sr-score">'+r.score+'</div><div class="sr-info"><div class="sr-name">'+escHtml(r.studentName)+' <span style="opacity:.4;font-size:.7rem">('+r.studentId+')</span></div><div class="sr-meta">📅 '+isoToDMY(r.date)+(r.testName?' · 📋 '+escHtml(r.testName):'')+' · Nộp lúc '+fmtTimeT(r.submittedAt)+'</div>'+partsHtml+(r.note?'<div class="sr-note">"'+escHtml(r.note)+'"</div>':'')+'</div>'+actHtml+'</div>';
   return div;
 }
 function reviewScore(id,status){
@@ -1010,7 +1023,7 @@ function renderBooks(){
   if(!pend.length){ pEl.innerHTML='<div class="empty">Không có yêu cầu nào đang chờ 🎉</div>'; }
   else pend.forEach(function(b){
     var div=document.createElement('div'); div.className='bk-card';
-    div.innerHTML='<div class="bk-info"><div class="bk-name">'+b.studentName+' <span style="opacity:.4;font-size:.73rem">('+b.studentId+')</span></div><div class="bk-time">📅 '+b.date+'  ⏰ '+b.time+'</div>'+(b.note?'<div class="bk-note">"'+b.note+'"</div>':'')+'</div><div class="bk-acts"><button class="btn-ok" onclick="reviewBk(\''+b.id+'\',\'approved\')">✅ Duyệt</button><button class="btn-no" onclick="reviewBk(\''+b.id+'\',\'declined\')">Từ chối</button></div>';
+    div.innerHTML='<div class="bk-info"><div class="bk-name">'+b.studentName+' <span style="opacity:.4;font-size:.73rem">('+b.studentId+')</span></div><div class="bk-time">📅 '+isoToDMY(b.date)+'  ⏰ '+b.time+'</div>'+(b.note?'<div class="bk-note">"'+b.note+'"</div>':'')+'</div><div class="bk-acts"><button class="btn-ok" onclick="reviewBk(\''+b.id+'\',\'approved\')">✅ Duyệt</button><button class="btn-no" onclick="reviewBk(\''+b.id+'\',\'declined\')">Từ chối</button></div>';
     pEl.appendChild(div);
   });
   dEl.innerHTML='';
@@ -1019,7 +1032,7 @@ function renderBooks(){
     var cls=b.status==='approved'?'bsa':'bsd';
     var lbl=b.status==='approved'?'✅ Đã duyệt':'❌ Từ chối';
     var div=document.createElement('div'); div.className='bk-card';
-    div.innerHTML='<div class="bk-info"><div class="bk-name">'+b.studentName+'</div><div class="bk-time">📅 '+b.date+'  ⏰ '+b.time+'</div></div><span class="bs '+cls+'">'+lbl+'</span>';
+    div.innerHTML='<div class="bk-info"><div class="bk-name">'+b.studentName+'</div><div class="bk-time">📅 '+isoToDMY(b.date)+'  ⏰ '+b.time+'</div></div><span class="bs '+cls+'">'+lbl+'</span>';
     dEl.appendChild(div);
   });
 }
@@ -1360,7 +1373,7 @@ function renderHw(hw){
     });
     var progressPct=totalItems?Math.round(subCount/totalItems*100):0;
     var progColor=progressPct===100?'var(--sage)':progressPct>0?'var(--gold)':'var(--muted)';
-    var hwDateDisplay=h.endDate&&h.endDate!==h.date?h.date+' → '+h.endDate:h.date;
+    var hwDateDisplay=h.endDate&&h.endDate!==h.date?isoToDMY(h.date)+' → '+isoToDMY(h.endDate):isoToDMY(h.date);
     sheet.innerHTML='<div class="hw-sheet-hd"><div><div class="hw-sheet-date">'+hwDateDisplay+'</div>'+(h.label?'<div class="hw-sheet-label">'+escHtml(h.label)+'</div>':'')+'</div><div style="display:flex;align-items:center;gap:.6rem">'+(secsHtml?'<div style="font-size:.7rem;color:'+progColor+';">'+progressPct+'%</div>':'')+'<span style="font-size:.7rem;font-weight:600;color:'+progColor+'">'+(progressPct===100?'✓ Hoàn thành':subCount+'/'+totalItems+' đã nộp')+'</span><button class="btn bg" style="font-size:.72rem;padding:.3rem .65rem;" onclick="openHwModal(\''+h.id+'\')">✏️</button><button class="rm" onclick="rmHw(\''+h.id+'\')">✕</button></div></div>'+dayLinkHtml+(secsHtml||'<div style="font-size:.75rem;color:var(--muted)">Chưa có nội dung</div>');
     el.appendChild(sheet);
   });
@@ -1381,7 +1394,7 @@ function renderSched(sched){
     var past=sc.date<td;
     var i=sched.indexOf(sc);
     var d=document.createElement('div'); d.className='li'; d.style.opacity=past?'.45':'1';
-    d.innerHTML='<div class="li-body"><div class="li-t">'+sc.title+'</div><div class="li-s">'+sc.date+(sc.time?' · '+sc.time:'')+'</div></div><button class="rm" onclick="rmSched('+i+')">✕</button>';
+    d.innerHTML='<div class="li-body"><div class="li-t">'+sc.title+'</div><div class="li-s">'+isoToDMY(sc.date)+(sc.time?' · '+sc.time:'')+'</div></div><button class="rm" onclick="rmSched('+i+')">✕</button>';
     el.appendChild(d);
   });
 }
@@ -1568,6 +1581,7 @@ function openClsHwModal(editId){
     var hw = (cls.homework||[]).find(function(h){return h.id===editId;});
     if(hw){
       document.getElementById('cls-hw-date').value = hw.date||'';
+    document.getElementById('cls-hw-enddate').value = hw.endDate||'';
       document.getElementById('cls-hw-label').value = hw.label||'';
       HW_SECTIONS.forEach(function(sec){ clsHwDraft[sec] = (hw[sec]||[]).map(function(x){return {text:x.text||'',link:x.link||'',desc:x.desc||''};});});
     }
@@ -1790,7 +1804,7 @@ function renderClsHwList(cls){
     var progColor = pct===100?'var(--sage)':pct>0?'var(--gold)':'var(--muted)';
     sheet.innerHTML =
       '<div class="cls-hw-hd">'+
-        '<div><div class="cls-hw-date">'+h.date+'</div>'+(h.label?'<div class="cls-hw-label">'+escHtml(h.label)+'</div>':'')+'</div>'+
+        '<div><div class="cls-hw-date">'+isoToDMY(h.date)+'</div>'+(h.label?'<div class="cls-hw-label">'+escHtml(h.label)+'</div>':'')+'</div>'+
         '<div style="display:flex;align-items:center;gap:.6rem;">'+
           '<span style="font-size:.72rem;color:'+progColor+';">'+doneCount+'/'+members.length+' nộp</span>'+
           '<button class="btn bg" style="font-size:.7rem;padding:.28rem .6rem;" onclick="openClsHwModal(\''+h.id+'\')">✏️</button>'+
