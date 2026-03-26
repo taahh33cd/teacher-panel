@@ -504,8 +504,11 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--te
   <div class="modal" style="width:560px;max-width:95vw;">
     <h3 id="m-hw-title">📋 Thêm BTVN</h3>
     <div class="fl-row">
-      <div class="fl"><label>Ngày giao</label><input id="hw-date" type="date"></div>
-      <div class="fl"><label>Tiêu đề ngày (tuỳ chọn)</label><input id="hw-label" type="text" placeholder="VD: Ngày 24/3"></div>
+      <div class="fl"><label>Ngày bắt đầu</label><input id="hw-date" type="date"></div>
+      <div class="fl"><label>Ngày kết thúc (để trống = 1 ngày)</label><input id="hw-enddate" type="date"></div>
+    </div>
+    <div class="fl-row">
+      <div class="fl" style="flex:2"><label>Tiêu đề (tuỳ chọn)</label><input id="hw-label" type="text" placeholder="VD: Ngày 24/3 – 26/3"></div>
     </div>
 
     <!-- 4 SECTIONS -->
@@ -596,8 +599,11 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--te
   <div class="modal" style="width:580px;max-width:95vw;">
     <h3 id="m-cls-hw-title">📋 Giao BTVN cho lớp</h3>
     <div class="fl-row">
-      <div class="fl"><label>Ngày giao</label><input id="cls-hw-date" type="date"></div>
-      <div class="fl"><label>Tiêu đề (tuỳ chọn)</label><input id="cls-hw-label" type="text" placeholder="VD: Ngày 28/3"></div>
+      <div class="fl"><label>Ngày bắt đầu</label><input id="cls-hw-date" type="date"></div>
+      <div class="fl"><label>Ngày kết thúc (để trống = 1 ngày)</label><input id="cls-hw-enddate" type="date"></div>
+    </div>
+    <div class="fl-row">
+      <div class="fl" style="flex:2"><label>Tiêu đề (tuỳ chọn)</label><input id="cls-hw-label" type="text" placeholder="VD: 24/3 – 26/3"></div>
     </div>
     <div style="display:grid;gap:.9rem;margin-top:.4rem;">
       <div style="background:var(--s2);border:1px solid var(--border);padding:.85rem;">
@@ -1275,12 +1281,14 @@ function openHwModal(editId){
     var hw=(s.homework||[]).find(function(h){return h.id===editId;});
     if(hw){
       document.getElementById('hw-date').value=hw.date||'';
+      document.getElementById('hw-enddate').value=hw.endDate||'';
       document.getElementById('hw-label').value=hw.label||'';
       HW_SECTIONS.forEach(function(sec){ hwDraft[sec]=(hw[sec]||[]).map(function(x){return Object.assign({},x);}); });
     }
     document.getElementById('m-hw-title').textContent='✏️ Sửa BTVN';
   } else {
     document.getElementById('hw-date').value='';
+    document.getElementById('hw-enddate').value='';
     document.getElementById('hw-label').value='';
     document.getElementById('m-hw-title').textContent='📋 Thêm BTVN';
   }
@@ -1293,8 +1301,11 @@ function saveHw(){
   if(!date){ alert('Chọn ngày giao!'); return; }
   var s=allStudents[CID];
   var homework=(s.homework||[]).slice();
+  var endDate=document.getElementById('hw-enddate').value||'';
+  // Validate: endDate must be >= date if provided
+  if(endDate && endDate<date){ alert('Ngày kết thúc phải sau ngày bắt đầu!'); return; }
   var entry={
-    id:hwEditId||('hw'+Date.now()),date:date,label:label,
+    id:hwEditId||('hw'+Date.now()),date:date,endDate:endDate||date,label:label,
     vocab:hwDraft.vocab.filter(function(x){return x.text||x.link;}).map(function(x){return {text:x.text,link:x.link,desc:x.desc||''}}),
     reading:hwDraft.reading.filter(function(x){return x.text||x.link;}).map(function(x){return {text:x.text,link:x.link,desc:x.desc||''}}),
     listening:hwDraft.listening.filter(function(x){return x.text||x.link;}).map(function(x){return {text:x.text,link:x.link,desc:x.desc||''}}),
@@ -1349,7 +1360,8 @@ function renderHw(hw){
     });
     var progressPct=totalItems?Math.round(subCount/totalItems*100):0;
     var progColor=progressPct===100?'var(--sage)':progressPct>0?'var(--gold)':'var(--muted)';
-    sheet.innerHTML='<div class="hw-sheet-hd"><div><div class="hw-sheet-date">'+h.date+'</div>'+(h.label?'<div class="hw-sheet-label">'+escHtml(h.label)+'</div>':'')+'</div><div style="display:flex;align-items:center;gap:.6rem">'+(secsHtml?'<div style="font-size:.7rem;color:'+progColor+';">'+progressPct+'%</div>':'')+'<span style="font-size:.7rem;font-weight:600;color:'+progColor+'">'+(progressPct===100?'✓ Hoàn thành':subCount+'/'+totalItems+' đã nộp')+'</span><button class="btn bg" style="font-size:.72rem;padding:.3rem .65rem;" onclick="openHwModal(\''+h.id+'\')">✏️</button><button class="rm" onclick="rmHw(\''+h.id+'\')">✕</button></div></div>'+dayLinkHtml+(secsHtml||'<div style="font-size:.75rem;color:var(--muted)">Chưa có nội dung</div>');
+    var hwDateDisplay=h.endDate&&h.endDate!==h.date?h.date+' → '+h.endDate:h.date;
+    sheet.innerHTML='<div class="hw-sheet-hd"><div><div class="hw-sheet-date">'+hwDateDisplay+'</div>'+(h.label?'<div class="hw-sheet-label">'+escHtml(h.label)+'</div>':'')+'</div><div style="display:flex;align-items:center;gap:.6rem">'+(secsHtml?'<div style="font-size:.7rem;color:'+progColor+';">'+progressPct+'%</div>':'')+'<span style="font-size:.7rem;font-weight:600;color:'+progColor+'">'+(progressPct===100?'✓ Hoàn thành':subCount+'/'+totalItems+' đã nộp')+'</span><button class="btn bg" style="font-size:.72rem;padding:.3rem .65rem;" onclick="openHwModal(\''+h.id+'\')">✏️</button><button class="rm" onclick="rmHw(\''+h.id+'\')">✕</button></div></div>'+dayLinkHtml+(secsHtml||'<div style="font-size:.75rem;color:var(--muted)">Chưa có nội dung</div>');
     el.appendChild(sheet);
   });
 }
