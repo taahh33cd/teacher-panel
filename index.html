@@ -510,6 +510,14 @@ body{font-family:\"Be Vietnam Pro\",sans-serif;background:var(--bg);color:var(--
             <button class="btn bp" style="font-size:.76rem;padding:.4rem .85rem;" onclick="addSvToClass()">Thêm</button>
           </div>
         </div>
+        <!-- Class Modules -->
+        <div class="card">
+          <div class="card-hd">
+            <span>📚 Học phần của lớp</span>
+            <button class="btn bg" onclick="openClsModModal()">+ Thêm học phần</button>
+          </div>
+          <div id="cls-mod-list"></div>
+        </div>
         <!-- Class HW -->
         <div class="card">
           <div class="card-hd">📋 BTVN của lớp</div>
@@ -743,6 +751,29 @@ body{font-family:\"Be Vietnam Pro\",sans-serif;background:var(--bg);color:var(--
       <div class="fl" style="margin:0"><label>Giờ buổi 2</label><input id="ec-cls-time2" type="time" style="width:100%;padding:.5rem .7rem;background:var(--s2);border:1px solid var(--border);color:var(--text);font-family:\"Be Vietnam Pro\",sans-serif;font-size:.83rem;outline:none;"></div>
     </div>
     <div class="mf"><button class="btn bg" onclick="closeM('m-edit-cls')">Huỷ</button><button class="btn bp" onclick="saveEditClass()">Lưu</button></div>
+  </div>
+</div>
+<!-- CLASS MODULE MODAL -->
+<div class="ov" id="m-cls-mod">
+  <div class="modal" style="width:460px;max-width:95vw;">
+    <h3 id="m-cls-mod-title">📚 Thêm học phần cho lớp</h3>
+    <div class="fl"><label>Tên học phần</label><input id="cls-nm-name" type="text" placeholder="VD: Listening Part 1-2"></div>
+    <div class="fl-row">
+      <div class="fl"><label>Tuần số</label><input id="cls-nm-week" type="number" min="1" placeholder="1"></div>
+      <div class="fl"><label>Tên tuần</label><input id="cls-nm-wkt" type="text" placeholder="VD: Nền tảng"></div>
+    </div>
+    <div class="fl-row">
+      <div class="fl"><label>Loại</label>
+        <select id="cls-nm-type"><option>Listening</option><option>Reading</option><option>Grammar</option><option>Vocab</option><option>Writing</option></select>
+      </div>
+      <div class="fl"><label>Trạng thái</label>
+        <select id="cls-nm-st"><option value="locked">Chưa học</option><option value="current">Đang học</option><option value="done">Hoàn thành</option></select>
+      </div>
+    </div>
+    <div class="mf">
+      <button class="btn bg" onclick="closeM('m-cls-mod')">Huỷ</button>
+      <button class="btn bp" onclick="saveClsMod()">Lưu</button>
+    </div>
   </div>
 </div>
 <!-- CLASS HW MODAL -->
@@ -1808,6 +1839,7 @@ function renderClsDetail(id){
     }
   });
   // HW list
+  renderClsModList(cls);
   renderClsHwList(cls);
 }
 
@@ -1818,14 +1850,32 @@ function addSvToClass(){
   var members = (cls.members||[]).slice();
   if(members.indexOf(svId) !== -1){ alert('Học viên đã trong lớp!'); return; }
   members.push(svId);
-  db.ref('classes/'+CLS_ID+'/members').set(members);
+  // Propagate class modules to new student
+  var clsMods = (cls.modules||[]).map(function(m){ return Object.assign({},m,{fromClass:CLS_ID}); });
+  var updates = {};
+  updates['classes/'+CLS_ID+'/members'] = members;
+  if(clsMods.length){
+    var sv = allStudents[svId];
+    var svMods = ((sv&&sv.modules)||[]).filter(function(m){ return !m.fromClass||m.fromClass!==CLS_ID; });
+    var merged = svMods.concat(clsMods).sort(function(a,b){return (a.week||0)-(b.week||0);});
+    updates['students/'+svId+'/modules'] = merged;
+  }
+  db.ref().update(updates);
   toast('✅ Đã thêm vào lớp!');
 }
 
 function rmSvFromClass(svId){
   var cls = allClasses[CLS_ID]; if(!cls) return;
   var members = (cls.members||[]).filter(function(m){ return m !== svId; });
-  db.ref('classes/'+CLS_ID+'/members').set(members);
+  var updates = {};
+  updates['classes/'+CLS_ID+'/members'] = members;
+  // Remove class modules from student
+  var sv = allStudents[svId];
+  if(sv){
+    var svMods = (sv.modules||[]).filter(function(m){ return !m.fromClass||m.fromClass!==CLS_ID; });
+    updates['students/'+svId+'/modules'] = svMods;
+  }
+  db.ref().update(updates);
   toast('Đã xoá khỏi lớp');
 }
 
@@ -2050,6 +2100,157 @@ function rmClsHw(hwId){
   });
   db.ref().update(updates);
   toast('🗑️ Đã xoá BTVN khỏi lớp');
+}
+
+/* ─── CLASS MODULES ─── */
+var clsModEditIdx = null;
+
+function renderClsModList(cls){
+  var el = document.getElementById('cls-mod-list');
+  var mods = cls.modules||[];
+  if(!mods.length){
+    el.innerHTML = '<div class="empty">Chưa có học phần nào. Nhấn <b>+ Thêm học phần</b> để bắt đầu.</div>';
+    return;
+  }
+  el.innerHTML = '';
+  // Group by week
+  var weeks = {};
+  mods.forEach(function(m, i){
+    var k = m.week||0;
+    if(!weeks[k]) weeks[k] = {title: m.weekTitle||('Tuần '+k), items:[]};
+    weeks[k].items.push({mod:m, idx:i});
+  });
+  Object.keys(weeks).sort(function(a,b){return +a-+b;}).forEach(function(wk){
+    var w = weeks[wk];
+    var done = w.items.filter(function(x){return x.mod.status==='done';}).length;
+    var pct = Math.round(done/w.items.length*100);
+    var wBlock = document.createElement('div');
+    wBlock.style.cssText = 'margin-bottom:1rem;';
+    // Week header
+    var wHd = document.createElement('div');
+    wHd.style.cssText = 'display:flex;align-items:center;gap:.6rem;padding:.4rem .7rem;background:var(--s3);border:1px solid var(--border);margin-bottom:.3rem;';
+    wHd.innerHTML =
+      '<span style="font-size:.62rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);">Tuần '+wk+'</span>'+
+      '<span style="font-size:.8rem;font-weight:600;color:var(--text);flex:1;">'+escHtml(w.title)+'</span>'+
+      '<span style="font-size:.68rem;color:'+(pct===100?'var(--sage)':pct>0?'var(--gold)':'var(--muted)')+';">'+done+'/'+w.items.length+'</span>'+
+      '<div style="width:60px;height:4px;background:var(--line);margin-left:.4rem;"><div style="height:100%;width:'+pct+'%;background:'+(pct===100?'var(--sage)':'var(--gold)')+'"></div></div>';
+    wBlock.appendChild(wHd);
+    // Module rows
+    w.items.forEach(function(x){
+      var m = x.mod; var i = x.idx;
+      var row = document.createElement('div');
+      row.className = 'li mod-'+m.status;
+      row.style.marginBottom = '.25rem';
+      var stColor = m.status==='done'?'var(--sage)':m.status==='current'?'var(--gold)':'var(--muted)';
+      var stIcon = m.status==='done'?'✓':m.status==='current'?'●':'○';
+      row.innerHTML =
+        '<span style="font-size:.9rem;color:'+stColor+';min-width:16px;">'+stIcon+'</span>'+
+        '<div class="li-body">'+
+          '<div class="li-t">'+escHtml(m.name)+'</div>'+
+          '<div class="li-s">'+(m.type||'')+'</div>'+
+        '</div>'+
+        '<select class="mod-sel" onchange="updClsModSt('+i+',this.value)">'+
+          '<option value="locked" '+(m.status==='locked'?'selected':'')+'>Chưa học</option>'+
+          '<option value="current" '+(m.status==='current'?'selected':'')+'>Đang học</option>'+
+          '<option value="done" '+(m.status==='done'?'selected':'')+'>Hoàn thành</option>'+
+        '</select>'+
+        '<button class="btn bg" style="font-size:.68rem;padding:.2rem .45rem;margin-left:.3rem;" onclick="openClsModModal('+i+')">✏️</button>'+
+        '<button class="rm" onclick="rmClsMod('+i+')">✕</button>';
+      wBlock.appendChild(row);
+    });
+    el.appendChild(wBlock);
+  });
+}
+
+function openClsModModal(editIdx){
+  clsModEditIdx = (editIdx !== undefined) ? editIdx : null;
+  var cls = allClasses[CLS_ID]; if(!cls) return;
+  if(clsModEditIdx !== null){
+    var m = (cls.modules||[])[clsModEditIdx]||{};
+    document.getElementById('cls-nm-name').value = m.name||'';
+    document.getElementById('cls-nm-week').value = m.week||1;
+    document.getElementById('cls-nm-wkt').value = m.weekTitle||'';
+    document.getElementById('cls-nm-type').value = m.type||'Listening';
+    document.getElementById('cls-nm-st').value = m.status||'locked';
+    document.getElementById('m-cls-mod-title').textContent = '✏️ Sửa học phần';
+  } else {
+    document.getElementById('cls-nm-name').value = '';
+    document.getElementById('cls-nm-week').value = '';
+    document.getElementById('cls-nm-wkt').value = '';
+    document.getElementById('cls-nm-type').value = 'Listening';
+    document.getElementById('cls-nm-st').value = 'locked';
+    document.getElementById('m-cls-mod-title').textContent = '📚 Thêm học phần cho lớp';
+  }
+  openM('m-cls-mod');
+}
+
+function saveClsMod(){
+  var name = document.getElementById('cls-nm-name').value.trim();
+  var week = parseInt(document.getElementById('cls-nm-week').value)||1;
+  var wkt  = document.getElementById('cls-nm-wkt').value.trim();
+  var type = document.getElementById('cls-nm-type').value;
+  var st   = document.getElementById('cls-nm-st').value;
+  if(!name){ alert('Nhập tên học phần!'); return; }
+  var cls = allClasses[CLS_ID]; if(!cls) return;
+  var mods = (cls.modules||[]).slice();
+  var entry = {name:name, week:week, weekTitle:wkt, type:type, status:st};
+  if(clsModEditIdx !== null) mods[clsModEditIdx] = entry;
+  else mods.push(entry);
+  mods.sort(function(a,b){ return (a.week||0)-(b.week||0); });
+  // Propagate to all members
+  var members = cls.members||[];
+  var updates = {};
+  updates['classes/'+CLS_ID+'/modules'] = mods;
+  members.forEach(function(svId){
+    var sv = allStudents[svId]; if(!sv) return;
+    // Merge: keep individual mods that are NOT from this class, then overlay class mods
+    var svMods = (sv.modules||[]).filter(function(m){ return !m.fromClass || m.fromClass !== CLS_ID; });
+    var classMods = mods.map(function(m){ return Object.assign({}, m, {fromClass: CLS_ID}); });
+    // Sort: individual mods first (by week), class mods mixed in
+    var merged = svMods.concat(classMods).sort(function(a,b){ return (a.week||0)-(b.week||0); });
+    updates['students/'+svId+'/modules'] = merged;
+  });
+  db.ref().update(updates);
+  closeM('m-cls-mod');
+  toast('✅ Đã lưu học phần cho ' + (members.length) + ' học viên!');
+}
+
+function rmClsMod(idx){
+  if(!confirm('Xoá học phần này? Sẽ xoá khỏi tất cả học viên trong lớp.')) return;
+  var cls = allClasses[CLS_ID]; if(!cls) return;
+  var mods = (cls.modules||[]).slice();
+  var removed = mods.splice(idx, 1)[0];
+  var members = cls.members||[];
+  var updates = {};
+  updates['classes/'+CLS_ID+'/modules'] = mods;
+  members.forEach(function(svId){
+    var sv = allStudents[svId]; if(!sv) return;
+    var svMods = (sv.modules||[]).filter(function(m){
+      return !(m.fromClass===CLS_ID && m.name===removed.name && m.week===removed.week);
+    });
+    updates['students/'+svId+'/modules'] = svMods;
+  });
+  db.ref().update(updates);
+  toast('🗑️ Đã xoá học phần khỏi lớp');
+}
+
+function updClsModSt(idx, st){
+  var cls = allClasses[CLS_ID]; if(!cls) return;
+  var mods = (cls.modules||[]).slice();
+  mods[idx].status = st;
+  var members = cls.members||[];
+  var updates = {};
+  updates['classes/'+CLS_ID+'/modules'] = mods;
+  // Also update status in each student
+  members.forEach(function(svId){
+    var sv = allStudents[svId]; if(!sv) return;
+    var svMods = (sv.modules||[]).slice();
+    var m = mods[idx];
+    var si = svMods.findIndex(function(x){ return x.fromClass===CLS_ID && x.name===m.name && x.week===m.week; });
+    if(si !== -1){ svMods[si].status = st; updates['students/'+svId+'/modules'] = svMods; }
+  });
+  db.ref().update(updates);
+  toast('✅ Cập nhật trạng thái!');
 }
 
 function renderClsHwList(cls){
