@@ -2199,8 +2199,8 @@ function showPgAttend(){
   var maSel=document.getElementById('ma-sv-sel');
   if(maSel){ maSel.innerHTML=''; Object.values(allStudents).sort(function(a,b){return a.name.localeCompare(b.name);}).forEach(function(s){ var o=document.createElement('option'); o.value=s.id; o.textContent=s.name; maSel.appendChild(o); }); }
   document.getElementById('ma-date-inp').value=today();
-  var svIds=Object.keys(allStudents);
-  if(!attendSvId&&svIds.length) attendSvId=svIds[0];
+  // Do NOT auto-select student — wait for user click
+  // attendSvId stays null until user picks one
   var clsIds=Object.keys(allClasses||{});
   if(!attendClsId&&clsIds.length) attendClsId=clsIds[0];
   renderAttendPage();
@@ -2219,7 +2219,8 @@ function renderAttendSv(){
   var tabsEl=document.getElementById('attend-sv-tabs'); tabsEl.innerHTML='';
   var svIds=Object.keys(allStudents).sort(function(a,b){return allStudents[a].name.localeCompare(allStudents[b].name);});
   if(!svIds.length){ tabsEl.innerHTML='<div style="font-size:.78rem;color:var(--muted)">Chưa có học viên</div>'; return; }
-  if(!attendSvId||!allStudents[attendSvId]) attendSvId=svIds.length?svIds[0]:null;
+  // Do NOT auto-select: only select if already chosen by user
+  if(attendSvId&&!allStudents[attendSvId]) attendSvId=null;
   // Apply filter + sort from advanced panel
   var attSearch=((document.getElementById('att-search')||{}).value||'').toLowerCase().trim();
   var attRate=(document.getElementById('att-rate-filter')||{}).value||'all';
@@ -2251,8 +2252,9 @@ function renderAttendSv(){
   });
   var rcEl=document.getElementById('att-filter-result');
   if(rcEl) rcEl.textContent=svData.length+' học viên'+(svData.length!==svIds.length?' (đã lọc từ '+svIds.length+')':'')+' trong tháng này';
-  if(!svData.find(function(d){return d.sid===attendSvId;})) attendSvId=svData.length?svData[0].sid:null;
-  if(!attendSvId){ tabsEl.innerHTML='<div style="font-size:.78rem;color:var(--muted)">Không có học viên nào khớp bộ lọc</div>'; return; }
+  // If current selection is filtered out, clear it (don't jump to first)
+  if(attendSvId&&!svData.find(function(d){return d.sid===attendSvId;})) attendSvId=null;
+  if(!svData.length){ tabsEl.innerHTML='<div style="font-size:.78rem;color:var(--muted);padding:.5rem .85rem;">Không có học viên nào khớp bộ lọc</div>'; return; }
   svData.forEach(function(d){
     var item=document.createElement('div');
     var isActive=d.sid===attendSvId;
@@ -2266,6 +2268,18 @@ function renderAttendSv(){
     item.onclick=function(){ attendSvId=d.sid; renderAttendSv(); };
     tabsEl.appendChild(item);
   });
+  // Show placeholder if no student selected yet
+  var gridEl=document.getElementById('attend-grid-content');
+  var sumEl=document.getElementById('attend-summary');
+  if(!attendSvId){
+    if(gridEl) gridEl.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:3rem 1rem;color:var(--muted);text-align:center;gap:.6rem;">'+
+      '<div style="font-size:2rem;opacity:.3;">📅</div>'+
+      '<div style="font-size:.85rem;font-weight:500;">Chọn học viên để xem lịch điểm danh</div>'+
+      '<div style="font-size:.73rem;opacity:.7;">Nhấn vào tên học viên bên trái</div>'+
+      '</div>';
+    if(sumEl) sumEl.innerHTML='';
+    return;
+  }
   var s=allStudents[attendSvId];
   var svAttend=allAttendance[attendSvId]||{};
   var scheduledDates={};
