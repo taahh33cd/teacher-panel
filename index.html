@@ -62,7 +62,7 @@ body{font-family:\"Be Vietnam Pro\",sans-serif;background:var(--bg);color:var(--
 .cnt-area.attend-mode{padding:0;}
 
 /* ─── PAGES ─── */
-.pg{display:none;}.pg.on{display:block;}
+.pg{display:none;}.pg.on{display:block;}#pg-attend.on{display:flex;}
 
 /* ─── STATS ─── */
 .stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.5rem;}
@@ -319,7 +319,6 @@ body{font-family:\"Be Vietnam Pro\",sans-serif;background:var(--bg);color:var(--
     <div class="nv"    id="nv-classes" onclick="showPg('classes',this)">🏫 Lớp học</div>
     <div class="nv"    id="nv-books"   onclick="showPg('books',this)">📅 Lịch book 1-1</div>
     <div class="nv"    id="nv-slots"   onclick="showPg('slots',this)">⏰ Khung giờ</div>
-    <div class="nv"    id="nv-attend"  onclick="showPg('attend',this)">📋 Điểm danh</div>
   </div>
   <div class="sb-students">
     <div class="sb-lbl">Học viên</div>
@@ -376,6 +375,68 @@ body{font-family:\"Be Vietnam Pro\",sans-serif;background:var(--bg);color:var(--
         <div class="card-hd" style="color:var(--rust)">⚠️ Chưa hoàn thành hôm qua <span style="font-size:.6rem;font-weight:400;color:var(--muted);">(quá deadline, chưa nộp link)</span></div>
         <div id="dash-lagging"></div>
       </div>
+
+      <!-- ── ĐIỂM DANH (embedded in dashboard) ── -->
+      <div class="card" style="padding:0;overflow:hidden;">
+        <div style="padding:.85rem 1.1rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.6rem;">
+          <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+            <span style="font-size:.67rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);">📋 Điểm danh</span>
+            <div style="display:flex;align-items:center;gap:.45rem;">
+              <span style="font-size:.7rem;color:var(--muted);">Tháng</span>
+              <select id="attend-month-sel" class="attend-sel" onchange="renderAttendPage()"></select>
+              <select id="attend-year-sel" class="attend-sel" onchange="renderAttendPage()"></select>
+            </div>
+            <div style="display:flex;gap:0;border:1px solid var(--border);">
+              <button id="attend-mode-sv" class="btn bp" style="border-radius:0;font-size:.75rem;padding:.3rem .75rem;" onclick="setAttendMode('sv')">&#128100; Cá nhân</button>
+              <button id="attend-mode-cls" class="btn bg" style="border-radius:0;font-size:.75rem;padding:.3rem .75rem;" onclick="setAttendMode('cls')">&#128101; Theo lớp</button>
+            </div>
+          </div>
+          <button class="btn bg" style="font-size:.73rem;" onclick="openM('m-manual-attend-pick')">+ Điểm danh thủ công</button>
+        </div>
+
+        <div style="display:grid;grid-template-columns:200px 1fr;align-items:start;">
+
+          <!-- LEFT panel -->
+          <div style="border-right:1px solid var(--border);min-height:300px;">
+            <div id="att-filter-panel" style="border-bottom:1px solid var(--border);padding:.6rem .75rem;">
+              <input id="att-search" type="text" placeholder="&#128269; Tìm tên / mã..." oninput="applyAttendFilter()"
+                style="width:100%;padding:.32rem .55rem;background:var(--s2);border:1px solid var(--border);color:var(--text);font-family:'Be Vietnam Pro',sans-serif;font-size:.76rem;outline:none;transition:border-color .15s;box-sizing:border-box;"
+                onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border)'">
+              <div style="display:flex;gap:.35rem;margin-top:.38rem;">
+                <select id="att-rate-filter" onchange="applyAttendFilter()" class="attend-sel" style="flex:1;font-size:.7rem;">
+                  <option value="all">Tất cả</option>
+                  <option value="good">&#8805;80% Tốt</option>
+                  <option value="avg">60–79% TB</option>
+                  <option value="bad">&lt;60% Yếu</option>
+                  <option value="none">Chưa có DL</option>
+                </select>
+                <select id="att-sort" onchange="applyAttendFilter()" class="attend-sel" style="flex:1;font-size:.7rem;">
+                  <option value="name">A→Z</option>
+                  <option value="rate-desc">CC cao</option>
+                  <option value="rate-asc">CC thấp</option>
+                </select>
+              </div>
+              <div id="att-filter-result" style="margin-top:.32rem;font-size:.67rem;color:var(--muted);"></div>
+            </div>
+            <div id="attend-sv-tabs" style="max-height:460px;overflow-y:auto;"></div>
+            <div id="attend-cls-tabs" style="display:none;max-height:460px;overflow-y:auto;"></div>
+            <div id="attend-summary" style="padding:.55rem .75rem;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:.28rem;"></div>
+            <div id="attend-cls-summary" style="padding:.55rem .75rem;border-top:1px solid var(--border);display:none;flex-direction:column;gap:.28rem;"></div>
+          </div>
+
+          <!-- RIGHT: calendar / table -->
+          <div>
+            <div id="attend-sv-mode">
+              <div id="attend-grid-content" style="padding:1.1rem;"></div>
+            </div>
+            <div id="attend-cls-mode" style="display:none;">
+              <div id="attend-cls-content" style="padding:1.1rem;"></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
     </div>
 
     <!-- SCORE REVIEW -->
@@ -509,86 +570,6 @@ body{font-family:\"Be Vietnam Pro\",sans-serif;background:var(--bg);color:var(--
 
   </div>
 
-    <!-- ATTENDANCE PAGE — 2-column layout: left panel (selector) + right (calendar/table) -->
-    <div class="pg" id="pg-attend" style="display:flex;flex-direction:column;gap:0;">
-
-      <!-- ── Top control bar ── -->
-      <div style="background:var(--s1);border-bottom:1px solid var(--border);padding:.7rem 1.8rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.65rem;margin-bottom:1rem;">
-        <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
-          <!-- Month/year -->
-          <div style="display:flex;align-items:center;gap:.5rem;">
-            <span style="font-size:.7rem;color:var(--muted);font-weight:600;letter-spacing:.06em;text-transform:uppercase;">Tháng</span>
-            <select id="attend-month-sel" class="attend-sel" onchange="renderAttendPage()"></select>
-            <select id="attend-year-sel" class="attend-sel" onchange="renderAttendPage()"></select>
-          </div>
-          <!-- Mode toggle -->
-          <div style="display:flex;gap:0;border:1px solid var(--border);">
-            <button id="attend-mode-sv" class="btn bp" style="border-radius:0;font-size:.77rem;padding:.38rem .85rem;" onclick="setAttendMode('sv')">&#128100; Cá nhân</button>
-            <button id="attend-mode-cls" class="btn bg" style="border-radius:0;font-size:.77rem;padding:.38rem .85rem;" onclick="setAttendMode('cls')">&#128101; Theo lớp</button>
-          </div>
-        </div>
-        <div style="display:flex;align-items:center;gap:.5rem;">
-          <button class="btn bg" style="font-size:.75rem;" onclick="openM('m-manual-attend-pick')">+ Điểm danh thủ công</button>
-        </div>
-      </div>
-
-      <!-- ── 2-column body ── -->
-      <div style="display:grid;grid-template-columns:220px 1fr;gap:1rem;align-items:start;padding:0 1.8rem 1.8rem;">
-
-        <!-- LEFT: Selector panel (student tabs OR class tabs + filter) -->
-        <div style="background:var(--s1);border:1px solid var(--border);box-shadow:0 1px 3px rgba(0,0,0,.04);">
-
-          <!-- Filter/search — only shown in sv mode -->
-          <div id="att-filter-panel" style="border-bottom:1px solid var(--border);padding:.7rem .85rem;">
-            <input id="att-search" type="text" placeholder="&#128269; Tìm tên / mã..." oninput="applyAttendFilter()"
-              style="width:100%;padding:.36rem .6rem;background:var(--s2);border:1px solid var(--border);color:var(--text);font-family:\"Be Vietnam Pro\",sans-serif;font-size:.78rem;outline:none;transition:border-color .15s;box-sizing:border-box;"
-              onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border)'">
-            <div style="display:flex;gap:.4rem;margin-top:.45rem;">
-              <select id="att-rate-filter" onchange="applyAttendFilter()" class="attend-sel" style="flex:1;font-size:.72rem;">
-                <option value="all">Tất cả</option>
-                <option value="good">&#8805;80% Tốt</option>
-                <option value="avg">60–79% TB</option>
-                <option value="bad">&lt;60% Yếu</option>
-                <option value="none">Chưa có DL</option>
-              </select>
-              <select id="att-sort" onchange="applyAttendFilter()" class="attend-sel" style="flex:1;font-size:.72rem;">
-                <option value="name">A→Z</option>
-                <option value="rate-desc">CC cao</option>
-                <option value="rate-asc">CC thấp</option>
-              </select>
-            </div>
-            <div id="att-filter-result" style="margin-top:.38rem;font-size:.68rem;color:var(--muted);"></div>
-          </div>
-
-          <!-- Student list (sv mode) -->
-          <div id="attend-sv-tabs" style="max-height:520px;overflow-y:auto;"></div>
-
-          <!-- Class list (cls mode) -->
-          <div id="attend-cls-tabs" style="display:none;"></div>
-
-          <!-- Stats pills at bottom of panel -->
-          <div id="attend-summary" style="padding:.6rem .85rem;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:.3rem;"></div>
-          <div id="attend-cls-summary" style="padding:.6rem .85rem;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:.3rem;display:none;"></div>
-        </div>
-
-        <!-- RIGHT: Calendar / table -->
-        <div>
-          <!-- sv mode -->
-          <div id="attend-sv-mode">
-            <div class="card" style="padding:0;overflow:hidden;">
-              <div id="attend-grid-content" style="padding:1.3rem;"></div>
-            </div>
-          </div>
-          <!-- cls mode -->
-          <div id="attend-cls-mode" style="display:none;">
-            <div class="card" style="padding:0;overflow:hidden;">
-              <div id="attend-cls-content" style="padding:1.3rem;"></div>
-            </div>
-          </div>
-        </div>
-
-      </div>
-    </div>
 
   </div>
 </div>
@@ -981,7 +962,7 @@ db.ref('goals').on('value', function(snap){
 });
 db.ref('attendance').on('value', function(snap){
   allAttendance = snap.val() || {};
-  if(document.getElementById('pg-attend').classList.contains('on')) renderAttendPage();
+  // attend is embedded in dash, rendered by renderDash
 });
 db.ref('daylinks').on('value', function(snap){
   allDayLinks = snap.val() || {};
@@ -1017,12 +998,9 @@ function showPg(name, el){
   document.querySelectorAll('.nv').forEach(function(n){ n.classList.remove('on'); });
   document.getElementById('pg-'+name).classList.add('on');
   if(el) el.classList.add('on');
-  // Scroll content area to top on every page change
   var ca=document.querySelector('.cnt-area');
-  if(ca){ ca.scrollTop=0; }
-  // Toggle zero-padding mode for attend page (has its own internal padding)
-  if(ca){ ca.classList.toggle('attend-mode', name==='attend'); }
-  var titles={dash:'Tổng quan',scores:'Duyệt điểm học viên',books:'Lịch book 1-1',slots:'Khung giờ trống',classes:'🏫 Lớp học',attend:'📋 Điểm danh'};
+  if(ca){ ca.scrollTop=0; ca.classList.remove('attend-mode'); }
+  var titles={dash:'Tổng quan',scores:'Duyệt điểm học viên',books:'Lịch book 1-1',slots:'Khung giờ trống',classes:'🏫 Lớp học'};
   document.getElementById('tb-title').textContent=titles[name]||'';
   document.getElementById('tb-sub').textContent='';
   document.getElementById('tb-acts').innerHTML='';
@@ -1031,7 +1009,6 @@ function showPg(name, el){
   if(name==='books')   renderBooks();
   if(name==='slots')   renderSlots();
   if(name==='classes'){ CLS_ID=null; exitClsDetail(); renderClsGrid(); }
-  if(name==='attend')  showPgAttend();
 }
 
 function selSv(id){
@@ -1078,6 +1055,9 @@ function updateNavBadges(){
 /* ═══ DASHBOARD ═══ */
 function renderDash(){
   updateNavBadges();
+  // Init attend selectors (embedded in dashboard)
+  initAttendSelectors();
+  showPgAttend();
   var students=Object.values(allStudents);
   var books=Object.values(allBookings);
   var td=today();
