@@ -298,149 +298,30 @@ body{font-family:\"Be Vietnam Pro\",sans-serif;background:var(--bg);color:var(--
 .cls-hw-prog-bar{height:4px;background:var(--line);margin:.4rem 0 .1rem;}
 .cls-hw-prog-fill{height:100%;background:linear-gradient(90deg,var(--sage),var(--gold));transition:width .4s;}
 
-/* ══════════════════════════════════════════
-   SIDEBAR TOGGLE — desktop & mobile
-══════════════════════════════════════════ */
-
-/* Toggle button (visible always) */
-.sb-toggle{
-  position:fixed;top:14px;left:14px;z-index:200;
-  width:34px;height:34px;
-  background:var(--sb-bg);border:1px solid var(--sb-border);
-  color:var(--sb-text);cursor:pointer;
-  display:flex;align-items:center;justify-content:center;
-  font-size:1.05rem;transition:all .2s;
-  box-shadow:0 2px 8px rgba(0,0,0,.18);
-  flex-shrink:0;
+/* ─── REAL-TIME LIVE INDICATOR ─── */
+.live-dot{
+  font-size:.5rem;color:var(--sage);
+  animation:livePulse 2s ease-in-out infinite;
+  vertical-align:middle;margin-left:.2rem;
 }
-.sb-toggle:hover{background:var(--sb-gold);color:var(--sb-bg);border-color:var(--sb-gold);}
-
-/* Sidebar collapsed state — desktop */
-body.sb-closed .sb{transform:translateX(-220px);}
-body.sb-closed .mn{margin-left:0;}
-body.sb-closed .sb-toggle{left:14px;}
-
-/* Sidebar transitions */
-.sb{transition:transform .25s cubic-bezier(.4,0,.2,1);}
-.mn{transition:margin-left .25s cubic-bezier(.4,0,.2,1);}
-
-/* Overlay — mobile only */
-.sb-overlay{
-  display:none;position:fixed;inset:0;
-  background:rgba(0,0,0,.45);z-index:19;
+@keyframes livePulse{
+  0%,100%{opacity:1;}
+  50%{opacity:.25;}
 }
-
-/* Topbar needs left padding for toggle button */
-.tbar{padding-left:3.5rem;}
-
-/* ══════════════════════════════════════════
-   RESPONSIVE — TABLET (≤900px)
-══════════════════════════════════════════ */
-@media(max-width:900px){
-  /* Sidebar: hidden by default, slides in as overlay */
-  .sb{
-    position:fixed;z-index:200;
-    transform:translateX(-220px);
-    box-shadow:4px 0 24px rgba(0,0,0,.25);
-  }
-  .sb.mob-open{transform:translateX(0);}
-  .sb-overlay{display:block;opacity:0;pointer-events:none;transition:opacity .25s;}
-  .sb-overlay.show{opacity:1;pointer-events:all;}
-
-  /* Main always full-width on mobile */
-  .mn{margin-left:0!important;}
-
-  /* Content padding */
-  .cnt-area{padding:1rem;}
-  .tbar{padding:0 1rem 0 3.2rem;height:50px;}
-
-  /* Grids → single column */
-  .two-col{grid-template-columns:1fr;}
-  .stats-row{grid-template-columns:1fr 1fr;}
-  .cls-grid{grid-template-columns:1fr;}
-
-  /* Modal full-width */
-  .modal{width:calc(100vw - 2rem);max-width:480px;padding:1.3rem;}
+/* Flash highlight when data just updated */
+@keyframes flashUpdate{
+  0%{background:rgba(46,125,70,.15);}
+  100%{background:transparent;}
 }
-
-/* ══════════════════════════════════════════
-   RESPONSIVE — MOBILE (≤600px)
-══════════════════════════════════════════ */
-@media(max-width:600px){
-  /* Stats: stack to 1 col */
-  .stats-row{grid-template-columns:1fr;}
-  .stat-c{padding:.85rem 1rem;}
-  .stat-n{font-size:1.9rem;}
-
-  /* Topbar */
-  .tbar{height:48px;padding:0 .75rem 0 3rem;}
-  .tbar-l h2{font-size:.92rem;}
-  .tbar-l .sub{display:none;}
-  .tbar-r .btn{padding:.38rem .6rem;font-size:.7rem;}
-
-  /* Content */
-  .cnt-area{padding:.75rem;}
-
-  /* Cards */
-  .card{padding:1rem;}
-  .card-hd{font-size:.62rem;}
-
-  /* Tables / list items */
-  .li{padding:.45rem .6rem;gap:.5rem;}
-  .li-t{font-size:.8rem;}
-
-  /* Booking cards */
-  .bk-card{flex-direction:column;gap:.55rem;}
-  .bk-acts{flex-direction:row;}
-
-  /* Score review */
-  .sr-hd{flex-direction:column;gap:.5rem;}
-  .sr-acts{flex-direction:row;flex-wrap:wrap;}
-
-  /* Attendance calendar: smaller cells */
-  .attend-cell{min-height:42px;padding:.18rem .22rem;}
-  .attend-day-num{font-size:.62rem;}
-  .attend-chip{font-size:.52rem;padding:.06rem .2rem;}
-  .attend-mark-btn{gap:1px;}
-  .mark-btn{font-size:.5rem;padding:.12rem 0;}
-
-  /* HW row */
-  .hw-item-row .hw-item-top{flex-wrap:wrap;}
-  .fl-row{flex-direction:column;gap:.5rem;}
-
-  /* Class detail */
-  .cls-detail-hd{flex-direction:column;align-items:flex-start;gap:.5rem;}
-  .add-sv-to-cls{flex-direction:column;}
-  .add-sv-to-cls select{width:100%;}
-
-  /* Modal */
-  .modal{width:calc(100vw - 1.2rem);padding:1.1rem;max-height:92vh;}
-  .mf{flex-wrap:wrap;gap:.4rem;}
-  .mf .btn{flex:1;min-width:80px;text-align:center;}
-
-  /* Progress rows */
-  .prog-row{flex-wrap:wrap;gap:.4rem;}
-  .prog-sv-name{min-width:unset;flex:none;width:100%;}
-  .prog-bar-wrap{flex:1;}
-
-  /* Links */
-  .link-box{flex-direction:column;align-items:flex-start;gap:.4rem;}
-
-  /* Slot/booking */
-  .slot-li{flex-wrap:wrap;gap:.4rem;}
-  .bk-acts{width:100%;}
-  .btn-ok,.btn-no{flex:1;text-align:center;}
+.hw-sheet.just-updated{
+  animation:flashUpdate .8s ease forwards;
 }
 </style>
 </head>
 <body>
 
-<!-- ═══ SIDEBAR TOGGLE ═══ -->
-<button class="sb-toggle" id="sb-toggle" onclick="toggleSidebar()" title="Đóng/mở menu">☰</button>
-<div class="sb-overlay" id="sb-overlay" onclick="closeSidebarMobile()"></div>
-
 <!-- ═══ SIDEBAR ═══ -->
-<div class="sb" id="sb">
+<div class="sb">
   <div class="sb-top">
     <div class="sb-logo">
   <img src="data:image/png;base64,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" alt="Logo" style="width:38px;height:38px;border-radius:8px;flex-shrink:0;">
@@ -452,11 +333,11 @@ body.sb-closed .sb-toggle{left:14px;}
     <div class="sb-sub">Quản lý khoá học TOEIC</div>
   </div>
   <div class="sb-nav">
-    <div class="nv on" id="nv-dash"    onclick="showPg('dash',this);closeSidebarMobile()">📊 Tổng quan</div>
-    <div class="nv"    id="nv-scores"  onclick="showPg('scores',this);closeSidebarMobile()">🎯 Duyệt điểm <span class="cnt" id="score-cnt" style="display:none">0</span></div>
-    <div class="nv"    id="nv-classes" onclick="showPg('classes',this);closeSidebarMobile()">🏫 Lớp học</div>
-    <div class="nv"    id="nv-books"   onclick="showPg('books',this);closeSidebarMobile()">📅 Lịch book 1-1</div>
-    <div class="nv"    id="nv-slots"   onclick="showPg('slots',this);closeSidebarMobile()">⏰ Khung giờ</div>
+    <div class="nv on" id="nv-dash"    onclick="showPg('dash',this)">📊 Tổng quan</div>
+    <div class="nv"    id="nv-scores"  onclick="showPg('scores',this)">🎯 Duyệt điểm <span class="cnt" id="score-cnt" style="display:none">0</span></div>
+    <div class="nv"    id="nv-classes" onclick="showPg('classes',this)">🏫 Lớp học</div>
+    <div class="nv"    id="nv-books"   onclick="showPg('books',this)">📅 Lịch book 1-1</div>
+    <div class="nv"    id="nv-slots"   onclick="showPg('slots',this)">⏰ Khung giờ</div>
   </div>
   <div class="sb-students">
     <div class="sb-lbl">Học viên</div>
@@ -703,7 +584,7 @@ body.sb-closed .sb-toggle{left:14px;}
             <div id="mod-list"></div>
           </div>
           <div class="card">
-            <div class="card-hd"><span>📋 BTVN (Bài tập về nhà)</span><button class="btn bg" onclick="openM('m-hw')">+ Thêm ngày</button></div>
+            <div class="card-hd"><span>📋 BTVN (Bài tập về nhà) <span class="live-dot" title="Cập nhật real-time">●</span></span><button class="btn bg" onclick="openM('m-hw')">+ Thêm ngày</button></div>
             <div id="hw-list"></div>
           </div>
           <div class="card">
@@ -1123,7 +1004,17 @@ db.ref('progress').on('value', function(snap){
 });
 db.ref('submissions').on('value', function(snap){
   allSubs = snap.val() || {};
-  if(CID && document.getElementById('hw-list')) renderHw(allStudents[CID] ? (allStudents[CID].homework||[]) : []);
+  // Cập nhật BTVN học viên đang xem
+  if(CID && allStudents[CID]){
+    renderHw(allStudents[CID].homework||[]);
+    renderSvProgress(allStudents[CID]);
+  }
+  // Cập nhật BTVN lớp nếu đang mở
+  if(document.getElementById('cls-hw-list') && typeof CLS_ID !== 'undefined' && CLS_ID && allClasses[CLS_ID]){
+    renderClsHwList(allClasses[CLS_ID]);
+  }
+  // Cập nhật dashboard (số liệu tổng quan)
+  if(document.getElementById('pg-dash').classList.contains('on')) renderDash();
 });
 db.ref('goals').on('value', function(snap){
   allGoals = snap.val() || {};
@@ -1135,7 +1026,16 @@ db.ref('attendance').on('value', function(snap){
 });
 db.ref('daylinks').on('value', function(snap){
   allDayLinks = snap.val() || {};
-  if(CID && document.getElementById('hw-list')) renderHw(allStudents[CID]?(allStudents[CID].homework||[]):[]);
+  // Cập nhật BTVN học viên đang xem
+  if(CID && allStudents[CID]){
+    renderHw(allStudents[CID].homework||[]);
+  }
+  // Cập nhật BTVN lớp nếu đang mở
+  if(document.getElementById('cls-hw-list') && typeof CLS_ID !== 'undefined' && CLS_ID && allClasses[CLS_ID]){
+    renderClsHwList(allClasses[CLS_ID]);
+  }
+  // Cập nhật dashboard
+  if(document.getElementById('pg-dash').classList.contains('on')) renderDash();
 });
 
 /* ═══ SIDEBAR ═══ */
@@ -1764,6 +1664,11 @@ function saveHw(){
 function renderHw(hw){
   var el=document.getElementById('hw-list');
   if(!hw||!hw.length){ el.innerHTML='<div class="empty">Chưa có BTVN nào</div>'; return; }
+  // Snapshot state cũ để detect thay đổi (flash)
+  var prevState={};
+  el.querySelectorAll('.hw-sheet[data-hwid]').forEach(function(s){
+    prevState[s.dataset.hwid]={pct:s.dataset.pct, link:s.dataset.link};
+  });
   el.innerHTML='';
   var svSubs=(allSubs[CID])||{};
   hw.slice().sort(function(a,b){return b.date.localeCompare(a.date);}).forEach(function(h){
@@ -1771,9 +1676,19 @@ function renderHw(hw){
     HW_SECTIONS.forEach(function(sec){ (h[sec]||[]).forEach(function(_,i){ if(svSubs[h.id+'_'+sec+'_'+i]) subCount++; }); });
     var totalItems=0;
     HW_SECTIONS.forEach(function(sec){ totalItems+=(h[sec]||[]).length; });
-    var sheet=document.createElement('div'); sheet.className='hw-sheet';
-    // Daily link from student
+    var sheet=document.createElement('div');
     var svDayLink=(allDayLinks[CID]&&allDayLinks[CID][h.id])||null;
+    var progressPct=totalItems?Math.round(subCount/totalItems*100):0;
+    var curLink=svDayLink?svDayLink.link:'';
+    sheet.className='hw-sheet';
+    sheet.dataset.hwid=h.id;
+    sheet.dataset.pct=progressPct;
+    sheet.dataset.link=curLink;
+    // Flash nếu có thay đổi so với lần render trước
+    if(prevState[h.id] && (prevState[h.id].pct !== String(progressPct) || prevState[h.id].link !== curLink)){
+      sheet.classList.add('just-updated');
+    }
+    // Link tổng hợp
     var dayLinkHtml='<div class="hw-daylink '+(svDayLink?'has-link':'no-link')+'">'
       +'<span class="hw-daylink-lbl">🔗 Link tổng hợp:</span>';
     if(svDayLink){
@@ -1783,6 +1698,7 @@ function renderHw(hw){
       dayLinkHtml+='<span style="font-size:.74rem;color:var(--muted);font-style:italic">Chưa nộp</span>';
     }
     dayLinkHtml+='</div>';
+    // Sections
     var secsHtml='';
     HW_SECTIONS.forEach(function(sec){
       var items=h[sec]||[]; if(!items.length) return;
@@ -1799,10 +1715,23 @@ function renderHw(hw){
       });
       secsHtml+='</div>';
     });
-    var progressPct=totalItems?Math.round(subCount/totalItems*100):0;
     var progColor=progressPct===100?'var(--sage)':progressPct>0?'var(--gold)':'var(--muted)';
     var hwDateDisplay=h.endDate&&h.endDate!==h.date?isoToDMY(h.date)+' → '+isoToDMY(h.endDate):isoToDMY(h.date);
-    sheet.innerHTML='<div class="hw-sheet-hd"><div><div class="hw-sheet-date">'+hwDateDisplay+'</div>'+(h.label?'<div class="hw-sheet-label">'+escHtml(h.label)+'</div>':'')+'</div><div style="display:flex;align-items:center;gap:.6rem">'+(secsHtml?'<div style="font-size:.7rem;color:'+progColor+';">'+progressPct+'%</div>':'')+'<span style="font-size:.7rem;font-weight:600;color:'+progColor+'">'+(progressPct===100?'✓ Hoàn thành':subCount+'/'+totalItems+' đã nộp')+'</span><button class="btn bg" style="font-size:.72rem;padding:.3rem .65rem;" onclick="openHwModal(\''+h.id+'\')">✏️</button><button class="rm" onclick="rmHw(\''+h.id+'\')">✕</button></div></div>'+dayLinkHtml+(secsHtml||'<div style="font-size:.75rem;color:var(--muted)">Chưa có nội dung</div>');
+    // Progress bar mini
+    var progBarHtml='<div style="display:flex;align-items:center;gap:.4rem;">'
+      +'<div style="width:60px;height:4px;background:var(--line);border-radius:2px;overflow:hidden;">'
+      +'<div style="width:'+progressPct+'%;height:100%;background:'+progColor+';transition:width .4s;"></div></div>'
+      +'<span style="font-size:.7rem;font-weight:600;color:'+progColor+';">'
+      +(progressPct===100?'✓ Xong':subCount+'/'+totalItems+'</span>');
+    if(svDayLink){
+      progBarHtml+=' <span style="font-size:.68rem;color:var(--sage);font-weight:600;">🔗 Đã link</span>';
+    }
+    progBarHtml+='</div>';
+    sheet.innerHTML='<div class="hw-sheet-hd"><div><div class="hw-sheet-date">'+hwDateDisplay+'</div>'+(h.label?'<div class="hw-sheet-label">'+escHtml(h.label)+'</div>':'')+'</div>'
+      +'<div style="display:flex;align-items:center;gap:.6rem;">'+progBarHtml
+      +'<button class="btn bg" style="font-size:.72rem;padding:.3rem .65rem;" onclick="openHwModal(\''+h.id+'\')">✏️</button>'
+      +'<button class="rm" onclick="rmHw(\''+h.id+'\')">✕</button></div></div>'
+      +dayLinkHtml+(secsHtml||'<div style="font-size:.75rem;color:var(--muted)">Chưa có nội dung</div>');
     el.appendChild(sheet);
   });
 }
@@ -2786,50 +2715,6 @@ function markAttend(sid,date,status){
 
 window.addEventListener('load', function(){
   renderDash();
-  // Desktop: start with sidebar open; mobile: start closed
-  if(window.innerWidth <= 900){
-    // mobile: sidebar already hidden via CSS transform, nothing to do
-  }
-});
-
-/* ══ SIDEBAR TOGGLE ══ */
-var _isMobile = function(){ return window.innerWidth <= 900; };
-
-function toggleSidebar(){
-  if(_isMobile()){
-    var sb = document.getElementById('sb');
-    var ov = document.getElementById('sb-overlay');
-    var isOpen = sb.classList.contains('mob-open');
-    if(isOpen){
-      sb.classList.remove('mob-open');
-      ov.classList.remove('show');
-    } else {
-      sb.classList.add('mob-open');
-      ov.classList.add('show');
-    }
-  } else {
-    // Desktop: toggle collapsed class on body
-    document.body.classList.toggle('sb-closed');
-  }
-}
-
-function closeSidebarMobile(){
-  if(_isMobile()){
-    document.getElementById('sb').classList.remove('mob-open');
-    document.getElementById('sb-overlay').classList.remove('show');
-  }
-}
-
-// Close sidebar on Escape key
-document.addEventListener('keydown', function(e){
-  if(e.key === 'Escape') closeSidebarMobile();
-});
-
-// Also close sidebar if student item clicked on mobile
-document.addEventListener('click', function(e){
-  if(_isMobile() && e.target.closest('.sv-item')){
-    closeSidebarMobile();
-  }
 });
 </script>
 </body>
