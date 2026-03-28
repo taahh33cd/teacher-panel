@@ -198,8 +198,28 @@ body{font-family:\"Be Vietnam Pro\",sans-serif;background:var(--bg);color:var(--
 .hw-item-desc b,.hw-item-desc strong{font-weight:700;}
 .hw-item-desc i,.hw-item-desc em{font-style:italic;}
 .hw-item-desc u{text-decoration:underline;}
-.hw-sheet{background:var(--s2);border:1px solid var(--border);padding:.9rem 1rem;margin-bottom:.55rem;}
-.hw-sheet-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem;}
+/* HW Filter bar */
+.hw-filter-bar{display:flex;align-items:center;gap:.35rem;margin-bottom:.85rem;flex-wrap:wrap;}
+.hw-ftab{display:flex;align-items:center;gap:.3rem;padding:.3rem .65rem;font-size:.73rem;font-weight:500;cursor:pointer;border:1px solid var(--border);background:var(--s2);color:var(--muted);transition:all .15s;font-family:"Be Vietnam Pro",sans-serif;}
+.hw-ftab:hover{border-color:var(--gold);color:var(--text);}
+.hw-ftab.on{background:var(--gold);color:#fff;border-color:var(--gold);}
+.hw-ftab .hw-fbadge{font-size:.62rem;font-weight:700;background:rgba(255,255,255,.28);padding:.05rem .32rem;border-radius:8px;min-width:16px;text-align:center;}
+.hw-ftab:not(.on) .hw-fbadge{background:var(--s3);color:var(--muted);}
+/* Collapsible sheets */
+.hw-sheet{background:var(--s2);border:1px solid var(--border);padding:0;margin-bottom:.55rem;transition:opacity .15s;}
+.hw-sheet.hw-expired{opacity:.65;}
+.hw-sheet.hw-done{opacity:.75;}
+.hw-sheet-hd{display:flex;align-items:center;justify-content:space-between;padding:.8rem 1rem;cursor:pointer;user-select:none;}
+.hw-sheet-hd:hover{background:rgba(0,0,0,.02);}
+.hw-sheet-body{padding:0 1rem .9rem 1rem;border-top:1px solid var(--line);}
+.hw-sheet.collapsed .hw-sheet-body{display:none;}
+.hw-sheet.collapsed .hw-sheet-hd{border-bottom:none;}
+.hw-chevron{font-size:.65rem;color:var(--muted);transition:transform .2s;margin-left:.25rem;flex-shrink:0;}
+.hw-sheet.collapsed .hw-chevron{transform:rotate(-90deg);}
+.hw-status-tag{font-size:.63rem;font-weight:700;padding:.15rem .45rem;border-radius:2px;letter-spacing:.04em;white-space:nowrap;}
+.hw-status-active{background:rgba(36,87,160,.1);color:var(--blue);border:1px solid rgba(36,87,160,.2);}
+.hw-status-expired{background:rgba(122,130,160,.1);color:var(--muted);border:1px solid var(--border);}
+.hw-status-done{background:rgba(46,125,70,.1);color:var(--sage);border:1px solid rgba(46,125,70,.2);}
 /* Daily link in teacher view */
 .hw-daylink{display:flex;align-items:center;gap:.55rem;padding:.45rem .7rem;margin-bottom:.6rem;border-radius:2px;}
 .hw-daylink.has-link{background:rgba(46,125,70,.07);border:1px solid rgba(46,125,70,.2);}
@@ -566,6 +586,12 @@ body{font-family:\"Be Vietnam Pro\",sans-serif;background:var(--bg);color:var(--
           </div>
           <div class="card">
             <div class="card-hd"><span>📋 BTVN (Bài tập về nhà)</span><button class="btn bg" onclick="openM('m-hw')">+ Thêm ngày</button></div>
+            <div class="hw-filter-bar" id="hw-filter-bar" style="display:none">
+              <button class="hw-ftab on" data-filter="active" onclick="setHwFilter('active')">📌 Đang học <span class="hw-fbadge" id="hw-badge-active">0</span></button>
+              <button class="hw-ftab" data-filter="all" onclick="setHwFilter('all')">Tất cả <span class="hw-fbadge" id="hw-badge-all">0</span></button>
+              <button class="hw-ftab" data-filter="done" onclick="setHwFilter('done')">✓ Hoàn thành <span class="hw-fbadge" id="hw-badge-done">0</span></button>
+              <button class="hw-ftab" data-filter="expired" onclick="setHwFilter('expired')">⏰ Hết hạn <span class="hw-fbadge" id="hw-badge-expired">0</span></button>
+            </div>
             <div id="hw-list"></div>
           </div>
           <div class="card">
@@ -1055,7 +1081,7 @@ function showPg(name, el){
 }
 
 function selSv(id){
-  CID=id; renderSB(); loadSvPage(id);
+  CID=id; hwFilter='active'; renderSB(); loadSvPage(id);
   document.querySelectorAll('.pg').forEach(function(p){ p.classList.remove('on'); });
   document.querySelectorAll('.nv').forEach(function(n){ n.classList.remove('on'); });
   document.getElementById('pg-sv').classList.add('on');
@@ -1635,12 +1661,27 @@ function saveHw(){
   db.ref('students/'+CID+'/homework').set(homework);
   closeHwModal(); toast('✅ Đã lưu BTVN!');
 }
+/* HW filter state */
+var hwFilter = 'active';
+function setHwFilter(f){
+  hwFilter = f;
+  document.querySelectorAll('.hw-ftab').forEach(function(btn){
+    btn.classList.toggle('on', btn.dataset.filter === f);
+  });
+  if(CID && allStudents[CID]) renderHw(allStudents[CID].homework||[]);
+}
+function toggleHwSheet(id){
+  var el=document.getElementById('hws-'+id);
+  if(el) el.classList.toggle('collapsed');
+}
 function renderHw(hw){
   var el=document.getElementById('hw-list');
-  if(!hw||!hw.length){ el.innerHTML='<div class="empty">Chưa có BTVN nào</div>'; return; }
+  if(!hw||!hw.length){ el.innerHTML='<div class="empty">Chưa có BTVN nào</div>'; document.getElementById('hw-filter-bar').style.display='none'; return; }
   el.innerHTML='';
   var svSubs=(allSubs[CID])||{};
-  hw.slice().sort(function(a,b){return b.date.localeCompare(a.date);}).forEach(function(h){
+  var td=today();
+  // Classify each hw entry
+  var classified=hw.slice().sort(function(a,b){return b.date.localeCompare(a.date);}).map(function(h){
     var subCount=0;
     HW_SECTIONS.forEach(function(sec){ (h[sec]||[]).forEach(function(_,i){
       var sub=svSubs[h.id+'_'+sec+'_'+i];
@@ -1648,8 +1689,40 @@ function renderHw(hw){
     }); });
     var totalItems=0;
     HW_SECTIONS.forEach(function(sec){ totalItems+=(h[sec]||[]).length; });
-    var sheet=document.createElement('div'); sheet.className='hw-sheet';
-    // Daily link from student
+    var progressPct=totalItems?Math.round(subCount/totalItems*100):0;
+    var endD=h.endDate&&h.endDate!==h.date?h.endDate:h.date;
+    var isExpired=endD<td;
+    var isDone=totalItems>0&&progressPct===100;
+    var status=isExpired?'expired':(isDone?'done':'active');
+    return {h:h,subCount:subCount,totalItems:totalItems,progressPct:progressPct,status:status,endD:endD};
+  });
+  // Update badges
+  var counts={all:classified.length,active:0,done:0,expired:0};
+  classified.forEach(function(c){ counts[c.status]++; });
+  // active = not expired and not done
+  document.getElementById('hw-badge-all').textContent=counts.all;
+  document.getElementById('hw-badge-active').textContent=counts.active;
+  document.getElementById('hw-badge-done').textContent=counts.done;
+  document.getElementById('hw-badge-expired').textContent=counts.expired;
+  // Show filter bar only if >1 entry
+  var filterBar=document.getElementById('hw-filter-bar');
+  filterBar.style.display=classified.length>1?'flex':'none';
+  // Filter
+  var filtered=hwFilter==='all'?classified:classified.filter(function(c){return c.status===hwFilter;});
+  if(!filtered.length){
+    var labels={'active':'đang học','done':'đã hoàn thành','expired':'hết hạn'};
+    el.innerHTML='<div class="empty">Không có BTVN '+(labels[hwFilter]||'')+'</div>'; return;
+  }
+  filtered.forEach(function(c){
+    var h=c.h; var subCount=c.subCount; var totalItems=c.totalItems; var progressPct=c.progressPct;
+    var sheet=document.createElement('div');
+    var sheetCls='hw-sheet'+(c.status==='expired'?' hw-expired':'')+(c.status==='done'?' hw-done':'');
+    // Default collapse expired and done
+    var isCollapsed=(c.status==='expired'||c.status==='done');
+    if(isCollapsed) sheetCls+=' collapsed';
+    sheet.className=sheetCls;
+    sheet.id='hws-'+h.id;
+    // Daily link
     var svDayLink=(allDayLinks[CID]&&allDayLinks[CID][h.id])||null;
     var dayLinkHtml='<div class="hw-daylink '+(svDayLink?'has-link':'no-link')+'">'
       +'<span class="hw-daylink-lbl">🔗 Link tổng hợp:</span>';
@@ -1672,11 +1745,9 @@ function renderHw(hw){
         if(!sub){
           subHtml='<span class="hw-sub-empty">Chưa nộp</span>';
         } else if(sub.link){
-          // Có link thật
           subHtml='<a class="hw-sub-link" href="'+escHtml(sub.link)+'" target="_blank">📤 Bài nộp</a>'
                  +'<span class="hw-sub-time">'+fmtTimeT(sub.submittedAt)+'</span>';
         } else if(sub.ticked){
-          // Tick hoàn thành nhưng không gắn link
           subHtml='<span style="font-size:.68rem;font-weight:600;color:var(--sage);padding:.18rem .5rem;border:1px solid rgba(46,125,70,.25);">✓ Đã hoàn thành</span>'
                  +'<span class="hw-sub-time">'+fmtTimeT(sub.tickedAt)+'</span>';
         } else {
@@ -1687,10 +1758,26 @@ function renderHw(hw){
       });
       secsHtml+='</div>';
     });
-    var progressPct=totalItems?Math.round(subCount/totalItems*100):0;
     var progColor=progressPct===100?'var(--sage)':progressPct>0?'var(--gold)':'var(--muted)';
     var hwDateDisplay=h.endDate&&h.endDate!==h.date?isoToDMY(h.date)+' → '+isoToDMY(h.endDate):isoToDMY(h.date);
-    sheet.innerHTML='<div class="hw-sheet-hd"><div><div class="hw-sheet-date">'+hwDateDisplay+'</div>'+(h.label?'<div class="hw-sheet-label">'+escHtml(h.label)+'</div>':'')+'</div><div style="display:flex;align-items:center;gap:.6rem">'+(secsHtml?'<div style="font-size:.7rem;color:'+progColor+';">'+progressPct+'%</div>':'')+'<span style="font-size:.7rem;font-weight:600;color:'+progColor+'">'+(progressPct===100?'✓ Hoàn thành':subCount+'/'+totalItems+' đã nộp')+'</span><button class="btn bg" style="font-size:.72rem;padding:.3rem .65rem;" onclick="openHwModal(\''+h.id+'\')">✏️</button><button class="rm" onclick="rmHw(\''+h.id+'\')">✕</button></div></div>'+dayLinkHtml+(secsHtml||'<div style="font-size:.75rem;color:var(--muted)">Chưa có nội dung</div>');
+    var statusTagHtml='';
+    if(c.status==='expired') statusTagHtml='<span class="hw-status-tag hw-status-expired">Hết hạn</span>';
+    else if(c.status==='done') statusTagHtml='<span class="hw-status-tag hw-status-done">✓ Xong</span>';
+    else statusTagHtml='<span class="hw-status-tag hw-status-active">Đang học</span>';
+    sheet.innerHTML=
+      '<div class="hw-sheet-hd" onclick="toggleHwSheet(\''+h.id+'\')">'
+        +'<div style="display:flex;align-items:center;gap:.6rem;min-width:0">'
+          +'<div><div class="hw-sheet-date">'+hwDateDisplay+'</div>'+(h.label?'<div class="hw-sheet-label">'+escHtml(h.label)+'</div>':'')+'</div>'
+          +statusTagHtml
+        +'</div>'
+        +'<div style="display:flex;align-items:center;gap:.5rem">'
+          +(secsHtml?'<span style="font-size:.7rem;color:'+progColor+';font-weight:600">'+(progressPct===100?'✓ Hoàn thành':subCount+'/'+totalItems+' đã nộp')+'</span>':'')
+          +'<button class="btn bg" style="font-size:.72rem;padding:.3rem .65rem;" onclick="event.stopPropagation();openHwModal(\''+h.id+'\')">✏️</button>'
+          +'<button class="rm" onclick="event.stopPropagation();rmHw(\''+h.id+'\')">✕</button>'
+          +'<span class="hw-chevron">▾</span>'
+        +'</div>'
+      +'</div>'
+      +'<div class="hw-sheet-body">'+dayLinkHtml+(secsHtml||'<div style="font-size:.75rem;color:var(--muted)">Chưa có nội dung</div>')+'</div>';
     el.appendChild(sheet);
   });
 }
