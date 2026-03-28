@@ -1693,13 +1693,19 @@ function renderHw(hw){
     var endD=h.endDate&&h.endDate!==h.date?h.endDate:h.date;
     var isExpired=endD<td;
     var isDone=totalItems>0&&progressPct===100;
+    // status = tag hiển thị (ưu tiên expired)
     var status=isExpired?'expired':(isDone?'done':'active');
-    return {h:h,subCount:subCount,totalItems:totalItems,progressPct:progressPct,status:status,endD:endD};
+    // tags = tập hợp filter (1 bài có thể thuộc nhiều nhóm)
+    var tags={active:!isExpired&&!isDone, done:isDone, expired:isExpired};
+    return {h:h,subCount:subCount,totalItems:totalItems,progressPct:progressPct,status:status,tags:tags,endD:endD};
   });
-  // Update badges
+  // Update badges — done đếm cả bài expired+done
   var counts={all:classified.length,active:0,done:0,expired:0};
-  classified.forEach(function(c){ counts[c.status]++; });
-  // active = not expired and not done
+  classified.forEach(function(c){
+    if(c.tags.active)   counts.active++;
+    if(c.tags.done)     counts.done++;
+    if(c.tags.expired)  counts.expired++;
+  });
   document.getElementById('hw-badge-all').textContent=counts.all;
   document.getElementById('hw-badge-active').textContent=counts.active;
   document.getElementById('hw-badge-done').textContent=counts.done;
@@ -1707,8 +1713,8 @@ function renderHw(hw){
   // Show filter bar only if >1 entry
   var filterBar=document.getElementById('hw-filter-bar');
   filterBar.style.display=classified.length>1?'flex':'none';
-  // Filter
-  var filtered=hwFilter==='all'?classified:classified.filter(function(c){return c.status===hwFilter;});
+  // Filter — dùng tags thay vì status
+  var filtered=hwFilter==='all'?classified:classified.filter(function(c){return c.tags[hwFilter];});
   if(!filtered.length){
     var labels={'active':'đang học','done':'đã hoàn thành','expired':'hết hạn'};
     el.innerHTML='<div class="empty">Không có BTVN '+(labels[hwFilter]||'')+'</div>'; return;
