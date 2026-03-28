@@ -2202,6 +2202,7 @@ function closeClsHwModal(){ clsHwDraft={vocab:[],reading:[],listening:[],other:[
 
 function saveClsHw(){
   var date = document.getElementById('cls-hw-date').value;
+  var endDate = document.getElementById('cls-hw-enddate').value;
   var label = document.getElementById('cls-hw-label').value.trim();
   if(!date){ alert('Chọn ngày giao!'); return; }
   var cls = allClasses[CLS_ID]; if(!cls) return;
@@ -2210,7 +2211,9 @@ function saveClsHw(){
 
   var hwEntry = {
     id: clsHwEditId||('hw'+Date.now()),
-    date: date, label: label,
+    date: date,
+    endDate: endDate||date,
+    label: label,
     classId: CLS_ID
   };
   HW_SECTIONS.forEach(function(sec){
@@ -2225,25 +2228,30 @@ function saveClsHw(){
   } else { clsHomework.push(hwEntry); }
   clsHomework.sort(function(a,b){return a.date.localeCompare(b.date);});
 
-  // Propagate to each student in the class
-  var updates = {};
-  updates['classes/'+CLS_ID+'/homework'] = clsHomework;
-  members.forEach(function(svId){
-    var sv = allStudents[svId]; if(!sv) return;
-    var svHw = (sv.homework||[]).slice();
-    if(clsHwEditId){
-      var si = svHw.findIndex(function(h){return h.id===clsHwEditId;});
-      if(si !== -1) svHw[si] = hwEntry; else svHw.push(hwEntry);
-    } else {
-      // Don't duplicate if same id already exists
-      if(!svHw.find(function(h){return h.id===hwEntry.id;})) svHw.push(hwEntry);
-    }
-    svHw.sort(function(a,b){return a.date.localeCompare(b.date);});
-    updates['students/'+svId+'/homework'] = svHw;
-  });
-  db.ref().update(updates);
+  // Propagate: đọc trực tiếp từ Firebase để tránh race condition với allStudents cache
+  var editId = clsHwEditId;
   closeClsHwModal();
-  toast('✅ Đã giao BTVN cho '+members.length+' học viên!');
+  toast('⏳ Đang giao BTVN...');
+  db.ref('classes/'+CLS_ID+'/homework').set(clsHomework).then(function(){
+    var promises = members.map(function(svId){
+      return db.ref('students/'+svId+'/homework').once('value').then(function(snap){
+        var svHw = (snap.val()||[]).slice();
+        if(editId){
+          var si = svHw.findIndex(function(h){return h.id===editId;});
+          if(si !== -1) svHw[si] = hwEntry; else svHw.push(hwEntry);
+        } else {
+          if(!svHw.find(function(h){return h.id===hwEntry.id;})) svHw.push(hwEntry);
+        }
+        svHw.sort(function(a,b){return a.date.localeCompare(b.date);});
+        return db.ref('students/'+svId+'/homework').set(svHw);
+      });
+    });
+    return Promise.all(promises);
+  }).then(function(){
+    toast('✅ Đã giao BTVN cho '+members.length+' học viên!');
+  }).catch(function(err){
+    toast('❌ Lỗi giao BTVN: '+err.message);
+  });
 }
 
 function rmClsHw(hwId){
@@ -2251,15 +2259,20 @@ function rmClsHw(hwId){
   var cls = allClasses[CLS_ID]; if(!cls) return;
   var members = cls.members||[];
   var clsHomework = (cls.homework||[]).filter(function(h){return h.id!==hwId;});
-  var updates = {};
-  updates['classes/'+CLS_ID+'/homework'] = clsHomework;
-  members.forEach(function(svId){
-    var sv = allStudents[svId]; if(!sv) return;
-    var svHw = (sv.homework||[]).filter(function(h){return h.id!==hwId;});
-    updates['students/'+svId+'/homework'] = svHw;
+  toast('⏳ Đang xoá...');
+  db.ref('classes/'+CLS_ID+'/homework').set(clsHomework).then(function(){
+    var promises = members.map(function(svId){
+      return db.ref('students/'+svId+'/homework').once('value').then(function(snap){
+        var svHw = (snap.val()||[]).filter(function(h){return h.id!==hwId;});
+        return db.ref('students/'+svId+'/homework').set(svHw);
+      });
+    });
+    return Promise.all(promises);
+  }).then(function(){
+    toast('🗑️ Đã xoá BTVN khỏi lớp');
+  }).catch(function(err){
+    toast('❌ Lỗi xoá: '+err.message);
   });
-  db.ref().update(updates);
-  toast('🗑️ Đã xoá BTVN khỏi lớp');
 }
 
 /* ─── CLASS MODULES ─── */
