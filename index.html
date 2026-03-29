@@ -1924,7 +1924,34 @@ var clsHwEditId = null;
 db.ref('classes').on('value', function(snap){
   allClasses = snap.val() || {};
   if(document.getElementById('pg-classes').classList.contains('on')) renderClsPage();
+  // Fix: backfill BTVN còn thiếu cho các học viên trong lớp
+  backfillClsHw();
 });
+
+// Đồng bộ BTVN lớp vào từng học viên nếu họ chưa có
+function backfillClsHw(){
+  var updates = {};
+  Object.values(allClasses).forEach(function(cls){
+    var clsHw = cls.homework||[];
+    if(!clsHw.length) return;
+    (cls.members||[]).forEach(function(svId){
+      var sv = allStudents[svId]; if(!sv) return;
+      var svHw = (sv.homework||[]).slice();
+      var changed = false;
+      clsHw.forEach(function(h){
+        if(!svHw.find(function(x){ return x.id===h.id; })){
+          svHw.push(h);
+          changed = true;
+        }
+      });
+      if(changed){
+        svHw.sort(function(a,b){ return a.date.localeCompare(b.date); });
+        updates['students/'+svId+'/homework'] = svHw;
+      }
+    });
+  });
+  if(Object.keys(updates).length) db.ref().update(updates);
+}
 
 function renderClsPage(){
   renderClsGrid();
@@ -2049,15 +2076,25 @@ function addSvToClass(){
   var members = (cls.members||[]).slice();
   if(members.indexOf(svId) !== -1){ alert('Học viên đã trong lớp!'); return; }
   members.push(svId);
-  // Propagate class modules to new student
-  var clsMods = (cls.modules||[]).map(function(m){ return Object.assign({},m,{fromClass:CLS_ID}); });
+  var sv = allStudents[svId];
   var updates = {};
   updates['classes/'+CLS_ID+'/members'] = members;
+  // Propagate class modules to new student
+  var clsMods = (cls.modules||[]).map(function(m){ return Object.assign({},m,{fromClass:CLS_ID}); });
   if(clsMods.length){
-    var sv = allStudents[svId];
     var svMods = ((sv&&sv.modules)||[]).filter(function(m){ return !m.fromClass||m.fromClass!==CLS_ID; });
     var merged = svMods.concat(clsMods).sort(function(a,b){return (a.week||0)-(b.week||0);});
     updates['students/'+svId+'/modules'] = merged;
+  }
+  // Fix: Propagate existing class homework to new student
+  var clsHw = cls.homework||[];
+  if(clsHw.length){
+    var svHw = ((sv&&sv.homework)||[]).slice();
+    clsHw.forEach(function(h){
+      if(!svHw.find(function(x){ return x.id===h.id; })) svHw.push(h);
+    });
+    svHw.sort(function(a,b){ return a.date.localeCompare(b.date); });
+    updates['students/'+svId+'/homework'] = svHw;
   }
   db.ref().update(updates);
   toast('✅ Đã thêm vào lớp!');
