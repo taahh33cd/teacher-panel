@@ -639,8 +639,8 @@ body{font-family:\"Be Vietnam Pro\",sans-serif;background:var(--bg);color:var(--
           <div class="card">
             <div class="card-hd"><span>📋 BTVN (Bài tập về nhà)</span><button class="btn bg" onclick="openM('m-hw')">+ Thêm ngày</button></div>
             <div class="hw-filter-bar" id="hw-filter-bar" style="display:none">
-              <button class="hw-ftab on" data-filter="active" onclick="setHwFilter('active')">📌 Đang học <span class="hw-fbadge" id="hw-badge-active">0</span></button>
-              <button class="hw-ftab" data-filter="all" onclick="setHwFilter('all')">Tất cả <span class="hw-fbadge" id="hw-badge-all">0</span></button>
+              <button class="hw-ftab" data-filter="active" onclick="setHwFilter('active')">📌 Đang học <span class="hw-fbadge" id="hw-badge-active">0</span></button>
+              <button class="hw-ftab on" data-filter="all" onclick="setHwFilter('all')">Tất cả <span class="hw-fbadge" id="hw-badge-all">0</span></button>
               <button class="hw-ftab" data-filter="done" onclick="setHwFilter('done')">✓ Hoàn thành <span class="hw-fbadge" id="hw-badge-done">0</span></button>
               <button class="hw-ftab" data-filter="expired" onclick="setHwFilter('expired')">⏰ Hết hạn <span class="hw-fbadge" id="hw-badge-expired">0</span></button>
             </div>
@@ -1153,7 +1153,7 @@ function showPg(name, el){
 }
 
 function selSv(id){
-  CID=id; hwFilter='active'; renderSB(); loadSvPage(id);
+  CID=id; hwFilter='all'; renderSB(); loadSvPage(id);
   document.querySelectorAll('.pg').forEach(function(p){ p.classList.remove('on'); });
   document.querySelectorAll('.nv').forEach(function(n){ n.classList.remove('on'); });
   document.getElementById('pg-sv').classList.add('on');
@@ -1742,7 +1742,7 @@ function saveHw(){
   closeHwModal(); toast('✅ Đã lưu BTVN!');
 }
 /* HW filter state */
-var hwFilter = 'active';
+var hwFilter = 'all';
 function setHwFilter(f){
   hwFilter = f;
   document.querySelectorAll('.hw-ftab').forEach(function(btn){
@@ -1775,8 +1775,9 @@ function renderHw(hw){
     var isDone=totalItems>0&&progressPct===100;
     // status = tag hiển thị (ưu tiên expired)
     var status=isExpired?'expired':(isDone?'done':'active');
-    // tags = tập hợp filter (1 bài có thể thuộc nhiều nhóm)
-    var tags={active:!isExpired&&!isDone, done:isDone, expired:isExpired};
+    // tags = tập hợp filter: bài expired nhưng chưa done vẫn hiện ở tab "Đang học"
+    // để giáo viên thấy học viên nào chưa nộp dù đã quá hạn
+    var tags={active:!isDone, done:isDone, expired:isExpired};
     return {h:h,subCount:subCount,totalItems:totalItems,progressPct:progressPct,status:status,tags:tags,endD:endD};
   });
   // Update badges — done đếm cả bài expired+done
