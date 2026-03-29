@@ -958,6 +958,9 @@ var allSubs      = {};
 var allGoals     = {};
 var allDayLinks  = {};
 var allAttendance = {};
+// Ready flags — tránh race condition khi load lần đầu
+var _subsReady    = false;
+var _progressReady= false;
 
 /* ═══ HELPERS ═══ */
 function today(){
@@ -1059,13 +1062,24 @@ db.ref('scoreRequests').on('value', function(snap){
 });
 db.ref('progress').on('value', function(snap){
   allProgress = snap.val() || {};
+  _progressReady = true;
   if(document.getElementById('pg-dash').classList.contains('on')) renderDash();
+  // Fix: re-render tab sv khi progress thay đổi (vd hv tick hoàn thành)
+  if(CID && allStudents[CID] && document.getElementById('pg-sv').classList.contains('on')){
+    renderSvProgress(allStudents[CID]);
+    // Nếu subs cũng đã sẵn, re-render hw luôn để sync
+    if(_subsReady) renderHw(allStudents[CID].homework||[]);
+  }
 });
 db.ref('submissions').on('value', function(snap){
   allSubs = snap.val() || {};
+  _subsReady = true;
   if(CID && allStudents[CID]){
-    renderHw(allStudents[CID].homework||[]);
-    renderSvProgress(allStudents[CID]);
+    // Fix: chỉ render khi allProgress cũng đã load xong tránh race condition
+    if(_progressReady){
+      renderHw(allStudents[CID].homework||[]);
+      renderSvProgress(allStudents[CID]);
+    }
   }
   if(document.getElementById('cls-hw-list') && typeof CLS_ID !== 'undefined' && CLS_ID && allClasses[CLS_ID]){
     renderClsHwList(allClasses[CLS_ID]);
@@ -1087,7 +1101,7 @@ db.ref('attendance').on('value', function(snap){
 });
 db.ref('daylinks').on('value', function(snap){
   allDayLinks = snap.val() || {};
-  if(CID && allStudents[CID]){
+  if(CID && allStudents[CID] && _subsReady && _progressReady){
     renderHw(allStudents[CID].homework||[]);
   }
   if(document.getElementById('cls-hw-list') && typeof CLS_ID !== 'undefined' && CLS_ID && allClasses[CLS_ID]){
@@ -1162,8 +1176,16 @@ function loadSvPage(id){
   renderScores(s.scores||[]);
   renderSvProgress(s);
   renderMods(s.modules||[]);
-  renderHw(s.homework||[]);
   renderSched(s.schedule||[]);
+  // Fix race condition: chỉ render hw khi cả allSubs và allProgress đã sẵn
+  // Nếu chưa sẵn, các listener sẽ tự gọi renderHw khi data về
+  if(_subsReady && _progressReady){
+    renderHw(s.homework||[]);
+  } else {
+    // Hiển thị loading tạm thời để user biết đang chờ
+    var el=document.getElementById('hw-list');
+    if(el) el.innerHTML='<div class="empty" style="color:var(--muted)">⏳ Đang tải...</div>';
+  }
 }
 
 /* ═══ NAV BADGES ═══ */
