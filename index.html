@@ -611,7 +611,22 @@ body{font-family:\"Be Vietnam Pro\",sans-serif;background:var(--bg);color:var(--
               <div class="fl"><label>Tuần hiện tại</label><input id="f-week" type="number" min="1"></div>
             </div>
             <div class="fl"><label>Nhận xét / Ghi chú</label><textarea id="f-note"></textarea></div>
-            <div class="fl"><label>Đơn giá / buổi (VNĐ)</label><input id="f-price" type="number" min="0" step="1000" placeholder="vd: 150000"></div>
+            <div class="fl">
+              <label>Loại khoá học</label>
+              <select id="f-course-type" onchange="onCourseTypeChange()">
+                <option value="group">🏫 Lớp nhóm</option>
+                <option value="per_session">👤 1-1 theo buổi</option>
+                <option value="package">🎯 1-1 Trọn gói</option>
+              </select>
+            </div>
+            <div id="f-price-wrap" class="fl"><label>Đơn giá / buổi (VNĐ)</label><input id="f-price" type="number" min="0" step="1000" placeholder="vd: 150000"></div>
+            <div id="f-package-wrap" style="display:none">
+              <div class="fl-row">
+                <div class="fl"><label>Tổng học phí (VNĐ)</label><input id="f-pkg-total" type="number" min="0" step="100000" placeholder="vd: 5000000"></div>
+                <div class="fl"><label>Đã thanh toán (VNĐ)</label><input id="f-pkg-paid" type="number" min="0" step="100000" placeholder="vd: 3000000"></div>
+              </div>
+              <div style="font-size:.72rem;color:var(--muted);margin-top:-.3rem;padding:.2rem .1rem">Còn lại sẽ tự tính: Tổng − Đã thanh toán</div>
+            </div>
           </div>
 
           <div class="card">
@@ -1173,6 +1188,11 @@ function loadSvPage(id){
   document.getElementById('f-week').value=s.currentWeek||'';
   document.getElementById('f-note').value=s.note||'';
   document.getElementById('f-price').value=s.pricePerSession||'';
+  var ct=s.courseType||'group';
+  document.getElementById('f-course-type').value=ct;
+  document.getElementById('f-pkg-total').value=s.packageTotal||'';
+  document.getElementById('f-pkg-paid').value=s.packagePaid||'';
+  onCourseTypeChange();
   var base=window.location.href.replace('teacher.html','student.html').replace(/\?.*$/,'');
   document.getElementById('sv-link').textContent=base+'?auto='+s.id;
   renderScores(s.scores||[]);
@@ -1493,6 +1513,14 @@ function addSlot(){
 }
 function rmSlot(id){ db.ref('slots/'+id).remove(); }
 
+
+function onCourseTypeChange(){
+  var ct=document.getElementById('f-course-type').value;
+  var isPackage=ct==='package';
+  document.getElementById('f-price-wrap').style.display=isPackage?'none':'';
+  document.getElementById('f-package-wrap').style.display=isPackage?'':'none';
+}
+
 /* ═══ SAVE / DEL STUDENT ═══ */
 function saveSv(){
   if(!CID) return;
@@ -1502,14 +1530,18 @@ function saveSv(){
   var week=parseInt(document.getElementById('f-week').value)||1;
   var note=document.getElementById('f-note').value.trim();
   var price=parseInt(document.getElementById('f-price').value)||0;
+  var courseType=document.getElementById('f-course-type').value||'group';
+  var packageTotal=parseInt(document.getElementById('f-pkg-total').value)||0;
+  var packagePaid=parseInt(document.getElementById('f-pkg-paid').value)||0;
   if(newId!==CID&&allStudents[newId]){ alert('Mã đã tồn tại!'); return; }
+  var fields={id:newId,name:name,currentWeek:week,note:note,pricePerSession:price,courseType:courseType,packageTotal:packageTotal,packagePaid:packagePaid};
   if(newId!==CID){
-    var updated=Object.assign({},s,{id:newId,name:name,currentWeek:week,note:note,pricePerSession:price});
+    var updated=Object.assign({},s,fields);
     db.ref('students/'+newId).set(updated);
     db.ref('students/'+CID).remove();
     CID=newId;
   } else {
-    db.ref('students/'+CID).update({id:newId,name:name,currentWeek:week,note:note,pricePerSession:price});
+    db.ref('students/'+CID).update(fields);
   }
   document.getElementById('tb-title').textContent=name;
   document.getElementById('tb-sub').textContent='ID: '+newId;
