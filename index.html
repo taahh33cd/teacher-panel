@@ -639,6 +639,11 @@ body{font-family:\"Be Vietnam Pro\",sans-serif;background:var(--bg);color:var(--
             <div id="score-list"></div>
           </div>
 
+          <div class="card" id="sv-errorlog-card">
+            <div class="card-hd">📒 Nhật ký lỗi</div>
+            <div id="sv-errorlog-content"><div style="font-size:.8rem;color:var(--muted);font-style:italic">Đang tải...</div></div>
+          </div>
+
           <div class="card">
             <div class="card-hd">🔗 Link học viên</div>
             <div class="link-box"><div class="link-url" id="sv-link"></div><button class="link-cp" onclick="cpLink()">Copy</button></div>
@@ -1199,6 +1204,7 @@ function loadSvPage(id){
   renderSvProgress(s);
   renderMods(s.modules||[]);
   renderSched(s.schedule||[]);
+  renderSvErrorLog(id);
   // Fix race condition: chỉ render hw khi cả allSubs và allProgress đã sẵn
   // Nếu chưa sẵn, các listener sẽ tự gọi renderHw khi data về
   if(_subsReady && _progressReady){
@@ -3037,6 +3043,115 @@ function updateAttendSummary(){
 window.addEventListener('load', function(){
   renderDash();
 });
+
+/* ─── ERROR LOG DASHBOARD (teacher view) ─── */
+var T_LS_TYPES = [
+  {key:'distractor',label:'Distractor'},{key:'miss_keyword',label:'Miss từ khoá'},
+  {key:'inference',label:'Inference'},{key:'no_read_q',label:'Không đọc đề kịp'},
+  {key:'paraphrase',label:'Paraphrase'},{key:'graphic',label:'Graphic'}
+];
+var T_RD_TYPES = [
+  {key:'vocabulary',label:'Từ vựng'},{key:'grammar',label:'Ngữ pháp'},
+  {key:'text_logic',label:'Logic văn bản'},{key:'detail_error',label:'Đọc sai chi tiết'},
+  {key:'inference_r',label:'Inference R'},{key:'cross_ref',label:'Cross-reference'},
+  {key:'no_time',label:'Không đủ thời gian'}
+];
+
+function renderSvErrorLog(studentId){
+  var el = document.getElementById('sv-errorlog-content');
+  if(!el) return;
+  el.innerHTML = '<div style="font-size:.8rem;color:var(--muted);font-style:italic">Đang tải...</div>';
+
+  db.ref('students/'+studentId+'/errorLog').once('value').then(function(snap){
+    var sessions = snap.val() ? Object.values(snap.val()) : [];
+    if(!sessions.length){
+      el.innerHTML='<div style="font-size:.8rem;color:var(--muted);font-style:italic">Học viên chưa ghi nhật ký lỗi nào.</div>';
+      return;
+    }
+
+    var lsTotals={}, rdTotals={};
+    T_LS_TYPES.forEach(function(t){ lsTotals[t.key]=0; });
+    T_RD_TYPES.forEach(function(t){ rdTotals[t.key]=0; });
+    var totalLs=0, totalRd=0;
+
+    sessions.forEach(function(sess){
+      if(sess.listening) T_LS_TYPES.forEach(function(t){ var v=sess.listening[t.key]||0; lsTotals[t.key]+=v; totalLs+=v; });
+      if(sess.reading)   T_RD_TYPES.forEach(function(t){ var v=sess.reading[t.key]||0;   rdTotals[t.key]+=v; totalRd+=v; });
+    });
+
+    // Stat row
+    var html = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin-bottom:1rem;">';
+    html += tStatMini(sessions.length, 'Buổi đã log');
+    html += tStatMini(totalLs, 'Lỗi Listening');
+    html += tStatMini(totalRd, 'Lỗi Reading');
+    html += '</div>';
+
+    // Top 3 Listening errors
+    var topLs = T_LS_TYPES.slice().sort(function(a,b){ return lsTotals[b.key]-lsTotals[a.key]; }).filter(function(t){ return lsTotals[t.key]>0; }).slice(0,3);
+    // Top 3 Reading errors
+    var topRd = T_RD_TYPES.slice().sort(function(a,b){ return rdTotals[b.key]-rdTotals[a.key]; }).filter(function(t){ return rdTotals[t.key]>0; }).slice(0,3);
+
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:.7rem;">';
+
+    html += '<div><div style="font-size:.6rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:.4rem;">🎧 Top lỗi Listening</div>';
+    if(topLs.length){
+      var maxL = lsTotals[topLs[0].key]||1;
+      topLs.forEach(function(t){
+        var pct = Math.round(lsTotals[t.key]/maxL*100);
+        html += '<div style="margin-bottom:.4rem;">'
+          +'<div style="display:flex;justify-content:space-between;font-size:.72rem;margin-bottom:.15rem">'
+            +'<span>'+t.label+'</span><span style="font-weight:700;color:var(--gold)">'+lsTotals[t.key]+'</span>'
+          +'</div>'
+          +'<div style="height:5px;background:var(--bg);"><div style="height:100%;background:var(--gold);width:'+pct+'%"></div></div>'
+          +'</div>';
+      });
+    } else { html += '<div style="font-size:.75rem;color:var(--muted);font-style:italic">Chưa có</div>'; }
+    html += '</div>';
+
+    html += '<div><div style="font-size:.6rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:.4rem;">📖 Top lỗi Reading</div>';
+    if(topRd.length){
+      var maxR = rdTotals[topRd[0].key]||1;
+      topRd.forEach(function(t){
+        var pct = Math.round(rdTotals[t.key]/maxR*100);
+        html += '<div style="margin-bottom:.4rem;">'
+          +'<div style="display:flex;justify-content:space-between;font-size:.72rem;margin-bottom:.15rem">'
+            +'<span>'+t.label+'</span><span style="font-weight:700;color:var(--blue)">'+rdTotals[t.key]+'</span>'
+          +'</div>'
+          +'<div style="height:5px;background:var(--bg);"><div style="height:100%;background:var(--blue);width:'+pct+'%"></div></div>'
+          +'</div>';
+      });
+    } else { html += '<div style="font-size:.75rem;color:var(--muted);font-style:italic">Chưa có</div>'; }
+    html += '</div></div>';
+
+    // Recent sessions (last 3)
+    var recent = sessions.slice().sort(function(a,b){ return b.date.localeCompare(a.date); }).slice(0,3);
+    html += '<div style="margin-top:.9rem;border-top:1px solid var(--line);padding-top:.7rem;">';
+    html += '<div style="font-size:.6rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:.5rem;">3 buổi gần nhất</div>';
+    recent.forEach(function(sess){
+      var _d=sess.date.split('-'); var dStr=_d[2]+'/'+_d[1]+'/'+_d[0];
+      html += '<div style="display:flex;justify-content:space-between;align-items:center;font-size:.75rem;padding:.3rem 0;border-bottom:1px solid var(--line);">'
+        +'<span style="color:var(--text)">'+escHtml(sess.testName||'—')+'</span>'
+        +'<span style="color:var(--muted)">'+dStr+'</span>'
+        +'<span style="font-size:.68rem;">'
+          +(sess.lsTotal?'<span style="color:var(--gold);font-weight:600">L:'+sess.lsTotal+'</span> ':''  )
+          +(sess.rdTotal?'<span style="color:var(--blue);font-weight:600">R:'+sess.rdTotal+'</span>':'')
+        +'</span>'
+        +'</div>';
+    });
+    html += '</div>';
+
+    el.innerHTML = html;
+  }).catch(function(){
+    el.innerHTML='<div style="font-size:.8rem;color:var(--muted)">Không thể tải dữ liệu.</div>';
+  });
+}
+
+function tStatMini(num, lbl){
+  return '<div style="text-align:center;background:var(--s2);border:1px solid var(--border);padding:.6rem .4rem;">'
+    +'<div style="font-family:\'Lora\',serif;font-size:1.4rem;font-weight:700;color:var(--gold);line-height:1">'+num+'</div>'
+    +'<div style="font-size:.6rem;color:var(--muted);margin-top:.2rem">'+lbl+'</div>'
+    +'</div>';
+}
 
 /* ─── SIDEBAR TOGGLE (mobile) ─── */
 function toggleSb(){
