@@ -429,6 +429,17 @@ body{font-family:\"Be Vietnam Pro\",sans-serif;background:var(--bg);color:var(--
   .hw-link-li{flex-wrap:wrap;gap:.35rem;}
   .hw-link-actions{flex-wrap:wrap;}
 
+  /* ── HW item row: stack inputs vertically on mobile ── */
+  .hw-item-row .hw-item-top{flex-wrap:wrap;gap:.35rem;}
+  .hw-item-row .hw-text-wrap{flex:none;width:100%;order:1;}
+  .hw-item-row .hw-text-wrap input{width:100%;box-sizing:border-box;}
+  .hw-item-row input.link-inp{flex:none;width:calc(100% - 2.2rem);order:2;box-sizing:border-box;}
+  .hw-item-row .hw-desc-toggle{order:3;font-size:.65rem;padding:.16rem .4rem;}
+  .hw-item-row .rm{order:4;margin-left:auto;}
+  /* Desc editor toolbar wraps on mobile */
+  .hw-desc-toolbar{flex-wrap:wrap;gap:3px;}
+  .hw-desc-toolbar span{display:none;}/* hide hint text to save space */
+
   /* ── Progress rows ── */
   .prog-row{flex-wrap:wrap;gap:.4rem;}
   .prog-sv-name{min-width:auto;font-size:.78rem;}
