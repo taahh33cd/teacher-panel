@@ -379,33 +379,103 @@ body{font-family:\"Be Vietnam Pro\",sans-serif;background:var(--bg);color:var(--
 
 /* ─── MOBILE RESPONSIVE ─── */
 @media(max-width:768px){
-  /* Show toggle button */
+  /* ── Sidebar ── */
   .sb-toggle{display:flex;}
-  /* Sidebar slides in/out */
   .sb{transform:translateX(-100%);transition:transform .25s ease;z-index:20;}
   .sb.open{transform:translateX(0);}
-  /* Main area full width */
+
+  /* ── Layout ── */
   .mn{margin-left:0;}
-  /* Topbar padding for toggle button */
-  .tbar{padding:0 1rem 0 3.5rem;}
-  .tbar-l h2{font-size:.95rem;}
-  /* Content area tighter padding */
-  .cnt-area{padding:1rem;}
-  /* Stats grid 2 cols on mobile */
-  .stats-row{grid-template-columns:repeat(2,1fr);}
-  /* Two-col → single col */
+  .tbar{height:auto;min-height:54px;padding:.45rem .75rem .45rem 3.5rem;flex-wrap:wrap;gap:.3rem;}
+  .tbar-l h2{font-size:.9rem;}
+  .tbar-l .sub{font-size:.62rem;}
+  .tbar-r{gap:.3rem;}
+  .cnt-area{padding:.75rem;}
+
+  /* ── Buttons ── */
+  .btn{font-size:.7rem;padding:.35rem .6rem;}
+  .btn-freeze,.btn-unfreeze{font-size:.7rem;padding:.35rem .6rem;}
+
+  /* ── Stats ── */
+  .stats-row{grid-template-columns:repeat(2,1fr);gap:.6rem;margin-bottom:1rem;}
+  .stat-n{font-size:1.9rem;}
+
+  /* ── Cards ── */
+  .card{padding:1rem;margin-bottom:1rem;}
+  .card-hd{font-size:.63rem;margin-bottom:.85rem;flex-wrap:wrap;gap:.4rem;}
+
+  /* ── Grid layouts ── */
   .two-col{grid-template-columns:1fr;}
-  /* Modal full-width on mobile */
-  .modal{width:calc(100vw - 2rem);max-height:92vh;padding:1.3rem;}
-  /* Attendance grid smaller */
+  .sv-card-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:.55rem;}
+  .sv-card{padding:.75rem .85rem;}
+  .sv-card-name{font-size:.83rem;}
+
+  /* ── Form rows stack ── */
+  .fl-row{flex-direction:column;gap:.5rem;}
+
+  /* ── Modal ── */
+  .modal{width:calc(100vw - 1.5rem);max-height:92vh;padding:1.2rem;}
+  #m-hw .modal{max-height:96vh;}
+  #m-hw .hw-modal-header{padding:1rem 1.2rem .8rem;}
+  #m-hw .hw-modal-body{padding:.9rem 1.2rem;}
+  #m-hw .hw-modal-footer{padding:.7rem 1.2rem;}
+  #m-hw .hw-modal-meta{flex-direction:column;gap:.5rem;}
+  #m-hw .hw-modal-meta .fl{min-width:auto;}
+
+  /* ── HW filters & sheets ── */
+  .hw-filter-bar{gap:.2rem;flex-wrap:wrap;}
+  .hw-ftab{font-size:.65rem;padding:.22rem .42rem;}
+  .hw-sheet-hd{padding:.55rem .7rem;flex-wrap:wrap;gap:.3rem;}
+  .hw-link-li{flex-wrap:wrap;gap:.35rem;}
+  .hw-link-actions{flex-wrap:wrap;}
+
+  /* ── Progress rows ── */
+  .prog-row{flex-wrap:wrap;gap:.4rem;}
+  .prog-sv-name{min-width:auto;font-size:.78rem;}
+  .prog-bar-wrap{flex:none;width:100%;}
+
+  /* ── Booking ── */
+  .bk-card{flex-direction:column;gap:.6rem;}
+  .bk-acts{flex-direction:row;width:100%;}
+  .bk-acts .btn-ok,.bk-acts .btn-no{flex:1;text-align:center;}
+
+  /* ── Score entries ── */
+  .sc-entry{flex-wrap:wrap;gap:.35rem;}
+  .sc-entry-main{width:100%;}
+  .sc-entry-acts{align-self:flex-start;}
+
+  /* ── Attendance: stack panel + calendar ── */
   .attend-cell{min-height:42px;}
-  /* Filter bar wraps nicely */
-  .hw-filter-bar{gap:.25rem;}
-  .hw-ftab{font-size:.68rem;padding:.25rem .5rem;}
-  /* hw-sheet-hd tighter */
-  .hw-sheet-hd{padding:.65rem .75rem;flex-wrap:wrap;gap:.35rem;}
-  /* tbar-r hides label text */
-  .btn{font-size:.72rem;padding:.38rem .75rem;}
+
+  /* ── Class detail ── */
+  .cls-detail-hd{flex-wrap:wrap;gap:.6rem;}
+  .cls-detail{padding:1rem;}
+  .cls-hw-hd{flex-wrap:wrap;gap:.4rem;}
+  .add-sv-to-cls{flex-direction:column;align-items:stretch;}
+  .add-sv-to-cls select{min-width:auto;}
+  .add-sv-to-cls .btn{width:100%;}
+
+  /* ── Score review ── */
+  .sr-hd{flex-wrap:wrap;gap:.5rem;}
+  .sr-acts{flex-wrap:wrap;}
+  .sr-score{font-size:1.6rem;min-width:44px;}
+
+  /* ── Slot list ── */
+  .slot-li{flex-wrap:wrap;gap:.4rem;}
+
+  /* ── Dashboard search ── */
+  #dash-search{width:120px!important;}
+}
+
+/* ─── EXTRA SMALL (< 480px) ─── */
+@media(max-width:480px){
+  #tb-acts{display:flex;flex-wrap:wrap;gap:.3rem;width:100%;}
+  #tb-acts .btn,#tb-acts .btn-freeze,#tb-acts .btn-unfreeze{flex:1;text-align:center;font-size:.68rem;}
+  .stats-row{grid-template-columns:1fr 1fr;}
+  .sv-card-grid{grid-template-columns:1fr 1fr;}
+  .cls-detail-hd > div:last-child > .btn{font-size:.68rem;padding:.32rem .55rem;}
+  .sr-score{font-size:1.4rem;}
+  .card-hd .btn{padding:.28rem .5rem;font-size:.66rem;}
 }
 </style>
 </head>
@@ -884,7 +954,7 @@ body{font-family:\"Be Vietnam Pro\",sans-serif;background:var(--bg);color:var(--
     <h3>Tạo lớp học mới</h3>
     <div class="fl"><label>Tên lớp</label><input id="nc-cls-name" type="text" placeholder="VD: TOEIC OFF_25"></div>
     <div class="fl"><label>Mô tả (tuỳ chọn)</label><input id="nc-cls-desc" type="text" placeholder="VD: Offline, 2 buổi/tuần"></div>
-    <div style="font-size:.67rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin:.9rem 0 .5rem;">📅 Lịch học cố định (2 buổi/tuần)</div>
+    <div style="font-size:.67rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin:.9rem 0 .5rem;">📅 Lịch học cố định <span style="font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0">(tối đa 3 buổi/tuần, không bắt buộc điền đủ)</span></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:.7rem;">
       <div class="fl" style="margin:0"><label>Buổi 1 — Thứ</label>
         <select id="nc-cls-day1" style="width:100%;padding:.5rem .7rem;background:var(--s2);border:1px solid var(--border);color:var(--text);font-family:\"Be Vietnam Pro\",sans-serif;font-size:.83rem;outline:none;">
@@ -902,6 +972,14 @@ body{font-family:\"Be Vietnam Pro\",sans-serif;background:var(--bg);color:var(--
         </select>
       </div>
       <div class="fl" style="margin:0"><label>Giờ buổi 2</label><input id="nc-cls-time2" type="time" style="width:100%;padding:.5rem .7rem;background:var(--s2);border:1px solid var(--border);color:var(--text);font-family:\"Be Vietnam Pro\",sans-serif;font-size:.83rem;outline:none;"></div>
+      <div class="fl" style="margin:0"><label>Buổi 3 — Thứ <span style="font-weight:400;font-size:.62rem;color:var(--muted);text-transform:none;letter-spacing:0">(tuỳ chọn)</span></label>
+        <select id="nc-cls-day3" style="width:100%;padding:.5rem .7rem;background:var(--s2);border:1px solid var(--border);color:var(--text);font-family:\"Be Vietnam Pro\",sans-serif;font-size:.83rem;outline:none;">
+          <option value="">— Chọn thứ —</option>
+          <option value="1">Thứ Hai</option><option value="2">Thứ Ba</option><option value="3">Thứ Tư</option>
+          <option value="4">Thứ Năm</option><option value="5">Thứ Sáu</option><option value="6">Thứ Bảy</option><option value="0">Chủ Nhật</option>
+        </select>
+      </div>
+      <div class="fl" style="margin:0"><label>Giờ buổi 3</label><input id="nc-cls-time3" type="time" style="width:100%;padding:.5rem .7rem;background:var(--s2);border:1px solid var(--border);color:var(--text);font-family:\"Be Vietnam Pro\",sans-serif;font-size:.83rem;outline:none;"></div>
     </div>
     <div class="mf"><button class="btn bg" onclick="closeM('m-add-cls')">Huỷ</button><button class="btn bp" onclick="addClass()">Tạo lớp</button></div>
   </div>
@@ -912,7 +990,7 @@ body{font-family:\"Be Vietnam Pro\",sans-serif;background:var(--bg);color:var(--
     <h3>Sửa thông tin lớp</h3>
     <div class="fl"><label>Tên lớp</label><input id="ec-cls-name" type="text"></div>
     <div class="fl"><label>Mô tả</label><input id="ec-cls-desc" type="text"></div>
-    <div style="font-size:.67rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin:.9rem 0 .5rem;">📅 Lịch học cố định (2 buổi/tuần)</div>
+    <div style="font-size:.67rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin:.9rem 0 .5rem;">📅 Lịch học cố định <span style="font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0">(tối đa 3 buổi/tuần, không bắt buộc điền đủ)</span></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:.7rem;">
       <div class="fl" style="margin:0"><label>Buổi 1 — Thứ</label>
         <select id="ec-cls-day1" style="width:100%;padding:.5rem .7rem;background:var(--s2);border:1px solid var(--border);color:var(--text);font-family:\"Be Vietnam Pro\",sans-serif;font-size:.83rem;outline:none;">
@@ -930,6 +1008,14 @@ body{font-family:\"Be Vietnam Pro\",sans-serif;background:var(--bg);color:var(--
         </select>
       </div>
       <div class="fl" style="margin:0"><label>Giờ buổi 2</label><input id="ec-cls-time2" type="time" style="width:100%;padding:.5rem .7rem;background:var(--s2);border:1px solid var(--border);color:var(--text);font-family:\"Be Vietnam Pro\",sans-serif;font-size:.83rem;outline:none;"></div>
+      <div class="fl" style="margin:0"><label>Buổi 3 — Thứ <span style="font-weight:400;font-size:.62rem;color:var(--muted);text-transform:none;letter-spacing:0">(tuỳ chọn)</span></label>
+        <select id="ec-cls-day3" style="width:100%;padding:.5rem .7rem;background:var(--s2);border:1px solid var(--border);color:var(--text);font-family:\"Be Vietnam Pro\",sans-serif;font-size:.83rem;outline:none;">
+          <option value="">— Chọn thứ —</option>
+          <option value="1">Thứ Hai</option><option value="2">Thứ Ba</option><option value="3">Thứ Tư</option>
+          <option value="4">Thứ Năm</option><option value="5">Thứ Sáu</option><option value="6">Thứ Bảy</option><option value="0">Chủ Nhật</option>
+        </select>
+      </div>
+      <div class="fl" style="margin:0"><label>Giờ buổi 3</label><input id="ec-cls-time3" type="time" style="width:100%;padding:.5rem .7rem;background:var(--s2);border:1px solid var(--border);color:var(--text);font-family:\"Be Vietnam Pro\",sans-serif;font-size:.83rem;outline:none;"></div>
     </div>
     <div class="mf"><button class="btn bg" onclick="closeM('m-edit-cls')">Huỷ</button><button class="btn bp" onclick="saveEditClass()">Lưu</button></div>
   </div>
@@ -1715,20 +1801,34 @@ function renderScores(sc){
   var sorted=(sc||[]).slice().sort(function(a,b){return b.date.localeCompare(a.date);});
   sorted.forEach(function(s,i){
     var d=document.createElement('div'); d.className='sc-entry'+(i===0?' sc-latest':'');
-    d.innerHTML=tcSeHTML(s.score, s.testName, s.date, false, i===0)
+    d.innerHTML=tcSeHTML(s.score, s.testName, s.date, false, i===0, s.parts||null)
       +'<div class="sc-entry-acts"><button class="rm" onclick="rmScore('+i+')">✕</button></div>';
     el.appendChild(d);
   });
 }
-function tcSeHTML(score, testName, date, isPending, isLatest){
+function tcSeHTML(score, testName, date, isPending, isLatest, parts){
   var dateStr=date||'';
   if(dateStr.match(/^\d{4}-\d{2}-\d{2}$/)){var _p=dateStr.split('-');dateStr=_p[2]+'/'+_p[1]+'/'+_p[0];}
   var scoreColor=isPending?'var(--gold)':isLatest?'var(--sage)':'var(--gold)';
+  // Parts chips
+  var lsChips='', rdChips='';
+  if(parts&&Object.keys(parts).length){
+    ['p1','p2','p3','p4'].forEach(function(k){ if(parts[k]!==undefined) lsChips+='<span class="sr-part-pip ls">'+k.toUpperCase()+':'+parts[k]+'</span>'; });
+    ['p5','p6','p7'].forEach(function(k){ if(parts[k]!==undefined) rdChips+='<span class="sr-part-pip rd">'+k.toUpperCase()+':'+parts[k]+'</span>'; });
+  }
+  var partsHtml='';
+  if(lsChips||rdChips){
+    partsHtml='<div class="sr-parts" style="margin-top:.45rem;">'
+      +(lsChips?'<span style="font-size:.65rem;opacity:.6;margin-right:.1rem;">🎧</span>'+lsChips:'')
+      +(rdChips?'<span style="font-size:.65rem;opacity:.6;margin-left:.2rem;margin-right:.1rem;">📖</span>'+rdChips:'')
+    +'</div>';
+  }
   return '<div class="sc-entry-main">'
     +'<div class="sc-entry-score" style="color:'+scoreColor+'">'+score+'</div>'
     +'<div class="sc-entry-info">'
       +(testName?'<div class="sc-entry-name">'+escHtml(testName)+'</div>':'<div class="sc-entry-name" style="color:var(--muted);font-style:italic;font-weight:400">Không có tên đề</div>')
       +(dateStr?'<div class="sc-entry-date">📅 '+dateStr+'</div>':'')
+      +partsHtml
     +'</div>'
   +'</div>';
 }
@@ -2197,7 +2297,7 @@ function renderClsGrid(){
 
 function buildWeeklySched(prefix){
   var sessions=[];
-  [1,2].forEach(function(n){
+  [1,2,3].forEach(function(n){
     var d=document.getElementById(prefix+'-day'+n); var t=document.getElementById(prefix+'-time'+n);
     if(d&&t&&d.value!=='') sessions.push({day:parseInt(d.value),time:t.value||''});
   });
@@ -2344,7 +2444,7 @@ function openEditClsModal(){
   document.getElementById('ec-cls-name').value = cls.name||'';
   document.getElementById('ec-cls-desc').value = cls.desc||'';
   var ws = cls.weeklySchedule||[];
-  [1,2].forEach(function(n){
+  [1,2,3].forEach(function(n){
     var sess = ws[n-1]||{};
     var dEl=document.getElementById('ec-cls-day'+n); var tEl=document.getElementById('ec-cls-time'+n);
     if(dEl) dEl.value = sess.day!==undefined ? String(sess.day) : '';
