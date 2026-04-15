@@ -343,7 +343,7 @@ body{font-family:\"Be Vietnam Pro\",sans-serif;background:var(--bg);color:var(--
 #m-hw .hw-sec-card-body{
   border-top:1px solid var(--border);
   display:flex;flex-direction:column;
-  max-height:0;  /* JS sets dynamically */
+  max-height:none;  /* JS controls .hw-items-scroll only */
   overflow:hidden;
 }
 #m-hw .hw-sec-card-body .hw-items-scroll{
@@ -351,6 +351,7 @@ body{font-family:\"Be Vietnam Pro\",sans-serif;background:var(--bg);color:var(--
   padding:.32rem .65rem .1rem;
   flex:1;
   min-height:0;
+  max-height:0;/* JS sets dynamically per item count */
 }
 #m-hw .hw-sec-card-body .hw-add-btn-wrap{
   padding:.2rem .65rem .28rem;
@@ -2036,15 +2037,15 @@ function updateHwSecBadges(){
     if(badge){badge.textContent=n;badge.classList.toggle('has-items',n>0);}
     if(card){
       if(n>0) card.classList.remove('sec-collapsed');
-      // Dynamic max-height: each item ~34px + padding; cap at 3 items visible
       var body=card.querySelector('.hw-sec-card-body');
       var scroll=card.querySelector('.hw-items-scroll');
       if(body&&scroll){
-        var itemH=36; // px per item row (compact)
+        var itemH=36;
         var maxItems=Math.min(n,3);
         var scrollH=maxItems>0?maxItems*itemH+8:0;
         scroll.style.maxHeight=scrollH+'px';
-        body.style.maxHeight=(scrollH+36)+'px'; // +36 for add-btn row
+        body.style.maxHeight='none';
+        body.style.overflow='visible';
       }
     }
   });
@@ -2759,7 +2760,8 @@ function updateClsHwSecBadges(){
         var maxItems=Math.min(n,3);
         var scrollH=maxItems>0?maxItems*itemH+8:0;
         scroll.style.maxHeight=scrollH+'px';
-        body.style.maxHeight=(scrollH+36)+'px';
+        body.style.maxHeight='none';
+        body.style.overflow='visible';
       }
     }
   });
