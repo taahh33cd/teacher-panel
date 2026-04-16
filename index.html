@@ -747,7 +747,6 @@ body{font-family:\"Be Vietnam Pro\",sans-serif;background:var(--bg);color:var(--
               <div class="fl"><label>Mã học viên</label><input id="f-id" type="text"></div>
               <div class="fl"><label>Tuần hiện tại</label><input id="f-week" type="number" min="1"></div>
             </div>
-            <div class="fl"><label>Nhận xét / Ghi chú</label><textarea id="f-note"></textarea></div>
             <div class="fl">
               <label>Loại khoá học</label>
               <select id="f-course-type" onchange="onCourseTypeChange()">
@@ -766,27 +765,33 @@ body{font-family:\"Be Vietnam Pro\",sans-serif;background:var(--bg);color:var(--
             </div>
           </div>
 
+          <!-- GHI CHÚ NỘI BỘ (chỉ GV thấy) -->
           <div class="card">
-            <div class="card-hd">📊 Tiến độ nhiệm vụ</div>
-            <div id="sv-progress-list"></div>
+            <div class="card-hd" style="color:var(--muted)">🔒 Ghi chú nội bộ <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:.65rem">(chỉ giáo viên thấy)</span></div>
+            <div class="fl" style="margin-bottom:0">
+              <textarea id="f-private-note" rows="3" placeholder="Ghi chú riêng về học viên này..." style="resize:vertical;min-height:3.5rem"></textarea>
+            </div>
+            <div id="private-note-status" style="font-size:.68rem;color:var(--muted);margin-top:.35rem;min-height:1rem"></div>
           </div>
 
+          <!-- NHẬN XÉT GỬI CHO HỌC VIÊN -->
           <div class="card">
-            <div class="card-hd"><span>🎯 Điểm TOEIC</span><button class="btn bg" onclick="openM('m-score')">+ Thêm</button></div>
-            <div id="score-list"></div>
+            <div class="card-hd">💬 Nhận xét <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:.65rem">(học viên sẽ thấy)</span></div>
+            <div class="fl">
+              <textarea id="f-comment" rows="3" placeholder="Viết nhận xét cho học viên..." style="resize:vertical;min-height:3.5rem"></textarea>
+            </div>
+            <button class="btn bp" onclick="sendComment()" style="width:100%;margin-top:.2rem">
+              📝 Gửi nhận xét &amp; thông báo
+            </button>
+            <div id="comment-status" style="font-size:.72rem;margin-top:.5rem;color:var(--muted)"></div>
+            <!-- Lịch sử nhận xét -->
+            <div id="comment-history" style="margin-top:1rem;display:none">
+              <div style="font-size:.65rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:.5rem">Lịch sử nhận xét</div>
+              <div id="comment-history-list"></div>
+            </div>
           </div>
 
-          <div class="card" id="sv-errorlog-card">
-            <div class="card-hd">📒 Nhật ký lỗi</div>
-            <div id="sv-errorlog-content"><div style="font-size:.8rem;color:var(--muted);font-style:italic">Đang tải...</div></div>
-          </div>
-
-          <div class="card">
-            <div class="card-hd">🔗 Link học viên</div>
-            <div class="link-box"><div class="link-url" id="sv-link"></div><button class="link-cp" onclick="cpLink()">Copy</button></div>
-            <div style="font-size:.72rem;color:var(--muted)">Gửi link này cho học viên. Họ nhập mã để đăng nhập.</div>
-          </div>
-
+          <!-- GỬI THÔNG BÁO -->
           <div class="card" id="notif-card">
             <div class="card-hd">🔔 Gửi thông báo</div>
             <div class="fl">
@@ -803,6 +808,27 @@ body{font-family:\"Be Vietnam Pro\",sans-serif;background:var(--bg);color:var(--
               </button>
             </div>
             <div id="notif-status" style="font-size:.72rem;margin-top:.5rem;color:var(--muted)"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-hd"><span>🎯 Điểm TOEIC</span><button class="btn bg" onclick="openM('m-score')">+ Thêm</button></div>
+            <div id="score-list"></div>
+          </div>
+
+          <div class="card" id="sv-errorlog-card">
+            <div class="card-hd">📒 Nhật ký lỗi</div>
+            <div id="sv-errorlog-content"><div style="font-size:.8rem;color:var(--muted);font-style:italic">Đang tải...</div></div>
+          </div>
+
+          <div class="card">
+            <div class="card-hd">📊 Tiến độ nhiệm vụ</div>
+            <div id="sv-progress-list"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-hd">🔗 Link học viên</div>
+            <div class="link-box"><div class="link-url" id="sv-link"></div><button class="link-cp" onclick="cpLink()">Copy</button></div>
+            <div style="font-size:.72rem;color:var(--muted)">Gửi link này cho học viên. Họ nhập mã để đăng nhập.</div>
           </div>
         </div>
 
@@ -1362,6 +1388,9 @@ db.ref('daylinks').on('value', function(snap){
   if(document.getElementById('pg-dash').classList.contains('on')) renderDash();
 });
 
+// Init auto-save cho private note
+initPrivateNoteAutoSave();
+
 /* ═══ SIDEBAR ═══ */
 function renderSB(){
   // sv-list removed from sidebar — nothing to render
@@ -1430,10 +1459,20 @@ function toggleFreeze(){
 
 function loadSvPage(id){
   var s=allStudents[id]; if(!s) return;
+  // Migration một lần: nếu có note cũ (nhận xét gửi HV) nhưng chưa migrate
+  // → copy sang note_legacy để student portal vẫn hiển thị được
+  // → sau đó GV sẽ gửi comment mới qua comments[]
+  if(s.note && !s.note_legacy && !(s.comments && s.comments.length)){
+    db.ref('students/'+id+'/note_legacy').set(s.note);
+  }
   document.getElementById('f-name').value=s.name||'';
   document.getElementById('f-id').value=s.id||'';
   document.getElementById('f-week').value=s.currentWeek||'';
-  document.getElementById('f-note').value=s.note||'';
+  document.getElementById('f-private-note').value=s.note||'';
+  document.getElementById('f-comment').value='';
+  document.getElementById('comment-status').textContent='';
+  document.getElementById('private-note-status').textContent='';
+  renderCommentHistory(s.comments||[], s.note_legacy||null);
   document.getElementById('f-price').value=s.pricePerSession||'';
   var ct=s.courseType||'group';
   document.getElementById('f-course-type').value=ct;
@@ -1795,13 +1834,12 @@ function saveSv(){
   var newId=document.getElementById('f-id').value.trim().toUpperCase();
   var name=document.getElementById('f-name').value.trim();
   var week=parseInt(document.getElementById('f-week').value)||1;
-  var note=document.getElementById('f-note').value.trim();
   var price=parseInt(document.getElementById('f-price').value)||0;
   var courseType=document.getElementById('f-course-type').value||'group';
   var packageTotal=parseInt(document.getElementById('f-pkg-total').value)||0;
   var packagePaid=parseInt(document.getElementById('f-pkg-paid').value)||0;
   if(newId!==CID&&allStudents[newId]){ alert('Mã đã tồn tại!'); return; }
-  var fields={id:newId,name:name,currentWeek:week,note:note,pricePerSession:price,courseType:courseType,packageTotal:packageTotal,packagePaid:packagePaid};
+  var fields={id:newId,name:name,currentWeek:week,pricePerSession:price,courseType:courseType,packageTotal:packageTotal,packagePaid:packagePaid};
   if(newId!==CID){
     var updated=Object.assign({},s,fields);
     db.ref('students/'+newId).set(updated);
@@ -1819,6 +1857,80 @@ function delSv(){
   db.ref('students/'+CID).remove();
   CID=null; showPg('dash',document.getElementById('nv-dash'));
   toast('🗑️ Đã xoá');
+}
+
+/* ═══ COMMENT (nhận xét gửi cho học viên) ═══ */
+function sendComment(){
+  if(!CID){ toast('Chưa chọn học viên!', false); return; }
+  var text=document.getElementById('f-comment').value.trim();
+  if(!text){ toast('Nhập nội dung nhận xét!', false); return; }
+  var s=allStudents[CID]; if(!s) return;
+  var entry={ text: text, ts: Date.now() };
+  var existing=(s.comments||[]);
+  var updated=existing.concat([entry]);
+  var statusEl=document.getElementById('comment-status');
+  statusEl.textContent='Đang gửi...';
+  db.ref('students/'+CID+'/comments').set(updated).then(function(){
+    // Gửi PNS
+    return db.ref('notifications/'+CID+'/'+Date.now()).set({
+      title: '📝 Bạn có nhận xét mới từ giáo viên!',
+      body: 'Mở app để xem nhận xét từ thầy/cô nhé!',
+      ts: Date.now()
+    });
+  }).then(function(){
+    document.getElementById('f-comment').value='';
+    statusEl.style.color='var(--green,#4A9B5E)';
+    statusEl.textContent='✅ Đã gửi nhận xét & thông báo!';
+    setTimeout(function(){ statusEl.textContent=''; statusEl.style.color=''; }, 3000);
+    toast('✅ Đã gửi nhận xét!');
+  }).catch(function(e){
+    statusEl.style.color='var(--rust,#c4622d)';
+    statusEl.textContent='❌ Lỗi: '+e.message;
+  });
+}
+
+function renderCommentHistory(comments, legacyNote){
+  var histEl=document.getElementById('comment-history');
+  var listEl=document.getElementById('comment-history-list');
+  // Nếu có dữ liệu note cũ và chưa có trong comments → hiển thị ghi chú migrate
+  var entries=comments.slice();
+  if(!entries.length){ histEl.style.display='none'; return; }
+  histEl.style.display='block';
+  var sorted=entries.slice().sort(function(a,b){return b.ts-a.ts;});
+  listEl.innerHTML=sorted.map(function(e){
+    var d=new Date(e.ts);
+    var dd=String(d.getDate()).padStart(2,'0');
+    var mm=String(d.getMonth()+1).padStart(2,'0');
+    var hh=String(d.getHours()).padStart(2,'0');
+    var mi=String(d.getMinutes()).padStart(2,'0');
+    var label=dd+'/'+mm+' '+hh+':'+mi;
+    return '<div style="border-left:2px solid var(--border);padding:.4rem .7rem;margin-bottom:.5rem;">'
+      +'<div style="font-size:.67rem;color:var(--muted);margin-bottom:.2rem">'+label+'</div>'
+      +'<div style="font-size:.8rem;color:var(--text)">'+escHtml(e.text)+'</div>'
+      +'</div>';
+  }).join('');
+}
+
+/* ═══ PRIVATE NOTE — auto-save ═══ */
+var _privateNoteTimer=null;
+function initPrivateNoteAutoSave(){
+  var el=document.getElementById('f-private-note');
+  if(!el) return;
+  el.addEventListener('input', function(){
+    clearTimeout(_privateNoteTimer);
+    document.getElementById('private-note-status').textContent='Đang gõ...';
+    _privateNoteTimer=setTimeout(function(){
+      if(!CID) return;
+      var val=el.value.trim();
+      db.ref('students/'+CID+'/note').set(val).then(function(){
+        var st=document.getElementById('private-note-status');
+        if(st){ st.textContent='✓ Đã lưu'; setTimeout(function(){ st.textContent=''; }, 2000); }
+      }).catch(function(){
+        var st=document.getElementById('private-note-status');
+        if(st) st.textContent='❌ Lỗi lưu';
+      });
+    }, 1000);
+  });
 }
 function cpLink(){
   var url=document.getElementById('sv-link').textContent;
